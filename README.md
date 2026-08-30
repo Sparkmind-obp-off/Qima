@@ -45,4 +45,4 @@ docs/
   qima-blueprints/
 ```
 
-See the QIMA blueprint stack for the complete product, architecture, data, UX/UI, implementation, QA, and execution contracts.
+See [`docs/qima-blueprints/README.md`](docs/qima-blueprints/README.md) for the ordered QIMA blueprint stack covering product, architecture, data, UX/UI, implementation, QA, and execution contracts.
