@@ -25,3 +25,10 @@ Thumbs.db
 
 # Local runtime data
 *.local
+
+# Cloudflare local state (local D1 databases, KV, caches)
+.wrangler/
+
+# Local secret overrides for `wrangler pages dev`
+.dev.vars
+.dev.vars.*

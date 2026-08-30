@@ -1,0 +1,167 @@
+/*
+ * QIMA design tokens.
+ *
+ * Traceability: doc 07 §11.1 Color Roles, §11.2 Typography.
+ * Semantic roles are declared once here; screens must consume the roles,
+ * never raw color values.
+ */
+
+:root {
+  /* Color roles */
+  --color-primary: #1f6f5c;
+  --color-secondary: #2f6f8f;
+  --color-background: #f7f8f7;
+  --color-surface: #ffffff;
+  --color-surface-muted: #eef1ef;
+  --color-text-primary: #1a201d;
+  --color-text-secondary: #5b6660;
+  --color-border: #d8ddd9;
+  --color-success: #1f7a4d;
+  --color-warning: #8a6410;
+  --color-danger: #a32a24;
+  --color-info: #1f5f8a;
+
+  /* Typography scale */
+  --font-family-base: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-size-display: 2.25rem;
+  --font-size-h1: 1.75rem;
+  --font-size-h2: 1.25rem;
+  --font-size-body-large: 1.0625rem;
+  --font-size-body: 1rem;
+  --font-size-caption: 0.8125rem;
+  --font-size-label: 0.75rem;
+
+  /* Spacing */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+
+  --radius-md: 8px;
+  --max-width-content: 56rem;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: var(--space-8) var(--space-4);
+  background: var(--color-background);
+  color: var(--color-text-primary);
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-body);
+  line-height: 1.6;
+}
+
+#bootstrap-header,
+#bootstrap-main,
+#bootstrap-footer {
+  max-width: var(--max-width-content);
+  margin: 0 auto;
+}
+
+.label {
+  margin: 0;
+  font-size: var(--font-size-label);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+h1 {
+  margin: var(--space-2) 0 var(--space-3);
+  font-size: var(--font-size-h1);
+  line-height: 1.25;
+}
+
+h2 {
+  margin: 0 0 var(--space-3);
+  font-size: var(--font-size-h2);
+}
+
+.body-large {
+  font-size: var(--font-size-body-large);
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+#bootstrap-main {
+  display: grid;
+  gap: var(--space-4);
+  margin-top: var(--space-6);
+}
+
+#bootstrap-main > section {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-6);
+}
+
+dl {
+  margin: 0;
+  display: grid;
+  grid-template-columns: minmax(10rem, auto) 1fr;
+  gap: var(--space-2) var(--space-4);
+}
+
+dt {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-caption);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+ul {
+  margin: 0;
+  padding-left: var(--space-6);
+  color: var(--color-text-secondary);
+}
+
+code {
+  background: var(--color-surface-muted);
+  border-radius: var(--radius-md);
+  padding: 0 var(--space-1);
+}
+
+/* Interaction states — doc 07 §"Loading/error/empty states" */
+.state-loading {
+  color: var(--color-text-secondary);
+}
+
+.state-success {
+  color: var(--color-success);
+  font-weight: 600;
+}
+
+.state-error {
+  color: var(--color-danger);
+  font-weight: 600;
+}
+
+#bootstrap-footer {
+  margin-top: var(--space-6);
+}
+
+.caption {
+  font-size: var(--font-size-caption);
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+@media (max-width: 40rem) {
+  dl {
+    grid-template-columns: 1fr;
+    gap: var(--space-1);
+  }
+}

@@ -1,0 +1,72 @@
+# QIMA CI / validation baseline — Phase 0 task T0.11.
+#
+# Traceability:
+# - .codex/PHASE_0_EXECUTION_SCOPE.md §3.9 (CI/validation baseline).
+# - .codex/QUALITY_GATES.md Gate 3 (Build and Static Validation),
+#   Gate 4 (Unit Tests), Gate 5 (Integration and Data Tests),
+#   Gate 10 (Security and Secrets), Gate 11 (Regression Safety).
+#
+# This workflow runs the repository's real commands. It must never weaken a
+# check to obtain a green result.
+
+name: QIMA Quality Gates
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quality-gates-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality-gates:
+    name: Build, static validation and tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          # Must match the `engines.node` constraint in package.json.
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Gate 10 — Security and Secrets: a known-vulnerable dependency tree must
+      # fail the build rather than be documented away.
+      - name: Gate 10 — dependency audit
+        run: npm audit --audit-level=high
+
+      - name: Gate 3 — format check
+        run: npm run format:check
+
+      - name: Gate 2/3 — architecture lint
+        run: npm run lint
+
+      - name: Gate 3 — type check
+        run: npm run typecheck
+
+      - name: Gate 3 — build
+        run: npm run build
+
+      # Gate 4/5/6/11 — unit, integration, API contract and regression tests.
+      # Runs after build because the deployment-artifact tests assert ./dist.
+      - name: Gate 4/5/6 — tests
+        run: npm test
+
+      # Database tooling baseline (Phase 0 task T0.10). Applied against the
+      # local D1 instance only; no remote/destructive database action runs in CI.
+      - name: Gate 5 — D1 migration baseline (local)
+        run: npm run db:migrate:local

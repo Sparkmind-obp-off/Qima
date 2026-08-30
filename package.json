@@ -1,0 +1,39 @@
+{
+  "name": "qima",
+  "version": "0.1.0",
+  "private": true,
+  "description": "QIMA — multi-organization / multi-unit Qur'an education platform.",
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "vite build",
+    "typecheck": "tsc --noEmit",
+    "lint": "node scripts/quality/lint.mjs",
+    "format:check": "node scripts/quality/format-check.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "dev": "vite",
+    "dev:sandbox": "wrangler pages dev dist --d1=qima-production --local --ip 0.0.0.0 --port 3000",
+    "clean-port": "fuser -k 3000/tcp 2>/dev/null || true",
+    "verify": "npm run format:check && npm run lint && npm run typecheck && npm run build && npm run test",
+    "db:migrate:local": "wrangler d1 migrations apply qima-production --local",
+    "db:migrate:prod": "wrangler d1 migrations apply qima-production",
+    "db:console:local": "wrangler d1 execute qima-production --local",
+    "cf-typegen": "wrangler types"
+  },
+  "engines": {
+    "node": ">=22.0.0",
+    "npm": ">=10.0.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260828.1",
+    "@hono/vite-cloudflare-pages": "^0.4.3",
+    "typescript": "^5.6.3",
+    "vite": "^8.2.2",
+    "vitest": "^4.1.11",
+    "wrangler": "^4.0.0"
+  }
+}

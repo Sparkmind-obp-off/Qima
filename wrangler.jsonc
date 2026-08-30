@@ -1,0 +1,29 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "qima",
+  "compatibility_date": "2024-11-01",
+  "pages_build_output_dir": "./dist",
+
+  // D1 database binding — Phase 0 provides the tooling baseline only.
+  // Business tables are Phase 1 (doc 10 §24 Phase 1 — Database Foundation).
+  //
+  // `database_id` holds a non-account placeholder, NOT a real identifier:
+  //   - local (`--local`) resolves the database by `database_name` and ignores
+  //     this value, so local development and migrations work as-is;
+  //   - the deploying platform/account owner replaces it with the provisioned
+  //     UUID at deploy time.
+  // It must stay a placeholder so no account-specific identifier is committed
+  // (Quality Gate 10 / IMPLEMENTATION_RULES secret boundary). An empty string
+  // is not usable: wrangler rejects a falsy `database_id` at dev startup.
+  //
+  // `migrations_dir` points at the canonical blueprint path (doc 08 §4
+  // Canonical Repository Structure), not wrangler's default ./migrations.
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "qima-production",
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "database/migrations"
+    }
+  ]
+}
