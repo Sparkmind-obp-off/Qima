@@ -25,3 +25,6 @@ Thumbs.db
 
 # Local runtime data
 *.local
+
+# TypeScript build metadata
+*.tsbuildinfo

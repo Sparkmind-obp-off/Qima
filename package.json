@@ -1,0 +1,25 @@
+{
+  "name": "qima",
+  "version": "0.1.0",
+  "private": true,
+  "description": "QIMA — Quality & Integrated Management Application.",
+  "type": "module",
+  "packageManager": "npm@11.4.2",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "tsc -b tsconfig.build.json",
+    "typecheck": "tsc -b tsconfig.build.json --pretty false",
+    "lint": "node scripts/quality/lint.mjs",
+    "format:check": "node scripts/quality/format-check.mjs",
+    "test": "npm run build && node --test tests/unit/*.test.mjs",
+    "start:web": "npm run build --workspace @qima/web && node apps/web/dist/index.js",
+    "start:api": "npm run build --workspace @qima/api && node apps/api/dist/index.js"
+  },
+  "engines": {
+    "node": ">=22.0.0",
+    "npm": ">=11.0.0"
+  }
+}

@@ -45,4 +45,27 @@ docs/
   qima-blueprints/
 ```
 
-See the QIMA blueprint stack for the complete product, architecture, data, UX/UI, implementation, QA, and execution contracts.
+See [`docs/qima-blueprints/README.md`](docs/qima-blueprints/README.md) for the ordered QIMA blueprint stack covering product, architecture, data, UX/UI, implementation, QA, and execution contracts.
+
+
+## Phase 0 Bootstrap
+
+This repository is bootstrapped as an npm workspace with separate web/API application surfaces and shared packages.
+
+### Commands
+
+```bash
+npm install
+npm run build
+npm run lint
+npm run format:check
+npm run typecheck
+npm test
+```
+
+Start targets are provided for the Phase 0 web and API bootstraps:
+
+```bash
+npm run start:web
+npm run start:api
+```
