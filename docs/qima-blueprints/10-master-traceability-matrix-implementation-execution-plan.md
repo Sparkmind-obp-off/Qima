@@ -164,22 +164,22 @@ QIMA
 │
 └── Public Experience
 7. MASTER TRACEABILITY MATRIX
-ID    Capability    Module    Domain    DB    API    UI    Priority
-AUTH-001    Login    Auth    User/Session    users/sessions    /auth/*    Login    P0
-ORG-001    Organization    Organizations    Organization    organizations    /organizations    Org Admin    P0
-UNIT-001    Unit    Units    Unit    units    /units    Unit Admin    P0
-ACC-001    Access    Users/Access    Role/Permission    roles/permissions    /users/*    Access UI    P0
-PROG-001    Programs    Programs    Program    programs    /programs    Program UI    P0
-ACT-001    Activities    Activities    Activity    activities    /activities    Activity UI    P0
-PART-001    Participants    Participants    Participant    participants    /participants    Participant UI    P0
-REG-001    Registration    Registrations    Registration    registrations    /registrations    Registration UI    P0
-ATT-001    Attendance    Attendance    Attendance    attendance    /attendance    Attendance UI    P0
-CONT-001    Content    Content    Content    content    /content    Content UI    P1
-RPT-001    Reporting    Reports    Report    derived/query    /reports    Reports    P1
-AUD-001    Audit    Audit    AuditEvent    audit_logs    /audit    Audit UI    P1
-SET-001    Settings    Settings    Configuration    settings    /settings    Settings    P1
-PUB-001    Public Experience    Public    PublicResource    derived    /public/*    Public UI    P1
-SEC-001    Scope Isolation    Shared/Auth    Scope    all scoped tables    all scoped APIs    —    P0
+ID	Capability	Module	Domain	DB	API	UI	Priority
+AUTH-001	Login	Auth	User/Session	users/sessions	/auth/*	Login	P0
+ORG-001	Organization	Organizations	Organization	organizations	/organizations	Org Admin	P0
+UNIT-001	Unit	Units	Unit	units	/units	Unit Admin	P0
+ACC-001	Access	Users/Access	Role/Permission	roles/permissions	/users/*	Access UI	P0
+PROG-001	Programs	Programs	Program	programs	/programs	Program UI	P0
+ACT-001	Activities	Activities	Activity	activities	/activities	Activity UI	P0
+PART-001	Participants	Participants	Participant	participants	/participants	Participant UI	P0
+REG-001	Registration	Registrations	Registration	registrations	/registrations	Registration UI	P0
+ATT-001	Attendance	Attendance	Attendance	attendance	/attendance	Attendance UI	P0
+CONT-001	Content	Content	Content	content	/content	Content UI	P1
+RPT-001	Reporting	Reports	Report	derived/query	/reports	Reports	P1
+AUD-001	Audit	Audit	AuditEvent	audit_logs	/audit	Audit UI	P1
+SET-001	Settings	Settings	Configuration	settings	/settings	Settings	P1
+PUB-001	Public Experience	Public	PublicResource	derived	/public/*	Public UI	P1
+SEC-001	Scope Isolation	Shared/Auth	Scope	all scoped tables	all scoped APIs	—	P0
 8. FOUNDATION TRACEABILITY
 FND-001 — Repository
 Requirement
@@ -828,19 +828,19 @@ READY
 only after all release gates pass.
 
 25. MASTER TEST MATRIX
-Area    Unit    Integration    API    E2E    Security
-Auth    ✓    ✓    ✓    ✓    ✓
-Organization    ✓    ✓    ✓    ✓    ✓
-Unit    ✓    ✓    ✓    ✓    ✓
-Access    ✓    ✓    ✓    ✓    ✓
-Programs    ✓    ✓    ✓    ✓    ✓
-Activities    ✓    ✓    ✓    ✓    ✓
-Participants    ✓    ✓    ✓    ✓    ✓
-Registration    ✓    ✓    ✓    ✓    ✓
-Attendance    ✓    ✓    ✓    ✓    ✓
-Reports    ✓    ✓    ✓    ✓    ✓
-Content    ✓    ✓    ✓    ✓    ✓
-Audit    ✓    ✓    ✓    —    ✓
+Area	Unit	Integration	API	E2E	Security
+Auth	✓	✓	✓	✓	✓
+Organization	✓	✓	✓	✓	✓
+Unit	✓	✓	✓	✓	✓
+Access	✓	✓	✓	✓	✓
+Programs	✓	✓	✓	✓	✓
+Activities	✓	✓	✓	✓	✓
+Participants	✓	✓	✓	✓	✓
+Registration	✓	✓	✓	✓	✓
+Attendance	✓	✓	✓	✓	✓
+Reports	✓	✓	✓	✓	✓
+Content	✓	✓	✓	✓	✓
+Audit	✓	✓	✓	—	✓
 26. CRITICAL E2E JOURNEY
 
 Canonical MVP journey:
@@ -1132,17 +1132,17 @@ Audit
 Validation
 Testing
 40. FINAL MVP ACCEPTANCE MATRIX
-Capability    Implemented    Tested    Scoped    Release
-Authentication    ✓    ✓    ✓    ✓
-Organization    ✓    ✓    ✓    ✓
-Unit    ✓    ✓    ✓    ✓
-Access    ✓    ✓    ✓    ✓
-Program    ✓    ✓    ✓    ✓
-Activity    ✓    ✓    ✓    ✓
-Participant    ✓    ✓    ✓    ✓
-Registration    ✓    ✓    ✓    ✓
-Attendance    ✓    ✓    ✓    ✓
-Report    ✓    ✓    ✓    ✓
+Capability	Implemented	Tested	Scoped	Release
+Authentication	✓	✓	✓	✓
+Organization	✓	✓	✓	✓
+Unit	✓	✓	✓	✓
+Access	✓	✓	✓	✓
+Program	✓	✓	✓	✓
+Activity	✓	✓	✓	✓
+Participant	✓	✓	✓	✓
+Registration	✓	✓	✓	✓
+Attendance	✓	✓	✓	✓
+Report	✓	✓	✓	✓
 41. FINAL EXECUTION SEQUENCE
 
 QIMA sekarang memiliki execution sequence resmi:

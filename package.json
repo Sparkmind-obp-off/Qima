@@ -10,13 +10,13 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "tsc -b tsconfig.build.json",
-    "typecheck": "tsc -b tsconfig.build.json --pretty false",
+    "build": "node scripts/quality/build.mjs",
+    "typecheck": "node scripts/quality/typecheck.mjs",
     "lint": "node scripts/quality/lint.mjs",
     "format:check": "node scripts/quality/format-check.mjs",
-    "test": "npm run build && node --test tests/unit/*.test.mjs",
-    "start:web": "npm run build --workspace @qima/web && node apps/web/dist/index.js",
-    "start:api": "npm run build --workspace @qima/api && node apps/api/dist/index.js"
+    "test": "node --test tests/unit/*.test.mjs",
+    "start:web": "node apps/web/src/index.mjs",
+    "start:api": "node apps/api/src/index.mjs"
   },
   "engines": {
     "node": ">=22.0.0",

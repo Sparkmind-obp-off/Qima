@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { loadQimaConfig } from '../../packages/config/dist/index.js';
-import { assertSameOrganization } from '../../packages/domain/dist/index.js';
-import { failure, success } from '../../packages/shared/dist/index.js';
+import { loadQimaConfig } from '../../packages/config/src/index.mjs';
+import { assertSameOrganization } from '../../packages/domain/src/index.mjs';
+import { failure, success } from '../../packages/shared/src/index.mjs';
 
 test('loads default QIMA config without secrets', () => {
   const config = loadQimaConfig({});

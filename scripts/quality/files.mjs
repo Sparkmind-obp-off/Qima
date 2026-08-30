@@ -1,7 +1,7 @@
 import { readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 
-const ignoredDirectories = new Set(['.git', 'node_modules', 'dist', 'coverage']);
+const ignoredDirectories = new Set(['.git', 'node_modules', 'dist', 'coverage', 'qima-blueprints']);
 const checkedExtensions = new Set(['.js', '.mjs', '.ts', '.json', '.md', '.example', '.gitignore']);
 
 function hasCheckedExtension(path) {

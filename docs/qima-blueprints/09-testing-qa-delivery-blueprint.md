@@ -216,17 +216,17 @@ Correct authorization
 Correct scope
 Correct error contract
 13. API TEST MATRIX
-API    Success    Validation    Auth    Scope    Error
-Auth    ✓    ✓    ✓    —    ✓
-Organizations    ✓    ✓    ✓    ✓    ✓
-Units    ✓    ✓    ✓    ✓    ✓
-Programs    ✓    ✓    ✓    ✓    ✓
-Activities    ✓    ✓    ✓    ✓    ✓
-Participants    ✓    ✓    ✓    ✓    ✓
-Registrations    ✓    ✓    ✓    ✓    ✓
-Attendance    ✓    ✓    ✓    ✓    ✓
-Content    ✓    ✓    ✓    ✓    ✓
-Reports    ✓    ✓    ✓    ✓    ✓
+API	Success	Validation	Auth	Scope	Error
+Auth	✓	✓	✓	—	✓
+Organizations	✓	✓	✓	✓	✓
+Units	✓	✓	✓	✓	✓
+Programs	✓	✓	✓	✓	✓
+Activities	✓	✓	✓	✓	✓
+Participants	✓	✓	✓	✓	✓
+Registrations	✓	✓	✓	✓	✓
+Attendance	✓	✓	✓	✓	✓
+Content	✓	✓	✓	✓	✓
+Reports	✓	✓	✓	✓	✓
 14. AUTHENTICATION TESTING
 
 Test:
@@ -929,18 +929,18 @@ E2E Test
 
 Before release:
 
-Area    Required
-Build    PASS
-Unit Tests    PASS
-Integration    PASS
-API Contract    PASS
-Authorization    PASS
-Scope Isolation    PASS
-E2E Critical Flow    PASS
-Accessibility Baseline    PASS
-Security Baseline    PASS
-Migration    PASS
-Smoke Test    PASS
+Area	Required
+Build	PASS
+Unit Tests	PASS
+Integration	PASS
+API Contract	PASS
+Authorization	PASS
+Scope Isolation	PASS
+E2E Critical Flow	PASS
+Accessibility Baseline	PASS
+Security Baseline	PASS
+Migration	PASS
+Smoke Test	PASS
 
 Any P0 failure:
 

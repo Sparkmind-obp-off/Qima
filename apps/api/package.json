@@ -3,8 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "scripts": { "build": "tsc -p tsconfig.json", "start": "node dist/index.js" },
+  "main": "src/index.mjs",
+  "scripts": { "build": "node ../../scripts/quality/check-package.mjs", "start": "node src/index.mjs" },
   "dependencies": { "@qima/config": "0.1.0", "@qima/shared": "0.1.0" }
 }
