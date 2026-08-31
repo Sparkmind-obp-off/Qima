@@ -8,11 +8,29 @@
  * - doc 08 §12 Presentation Layer: no business logic lives in presentation.
  *
  * This shell exists to prove the deployment is live. It is not a product screen.
+ *
+ * The phase label is supplied by the caller from `QIMA_CURRENT_PHASE` rather
+ * than hardcoded: a shell that advertises a different phase than the artifact
+ * reports at `/api/v1/meta` would misstate the implemented capability
+ * (.codex/IMPLEMENTATION_RULES.md §3 Phase Rule).
  */
 
 export interface BootstrapShellProps {
   readonly environment: string;
   readonly apiBasePath: string;
+  readonly phase: string;
+}
+
+/** Human-readable phase titles defined by doc 10 §24. */
+const PHASE_TITLES: Readonly<Record<string, string>> = {
+  'phase-0-bootstrap': 'Phase 0 — Project Bootstrap',
+  'phase-1-database-foundation': 'Phase 1 — Database Foundation',
+  'phase-2-authentication-access': 'Phase 2 — Authentication & Access',
+  'phase-3-organization-unit': 'Phase 3 — Organization & Unit',
+};
+
+function phaseTitle(phase: string): string {
+  return PHASE_TITLES[phase] ?? phase;
 }
 
 function escapeHtml(value: string): string {
@@ -26,21 +44,24 @@ function escapeHtml(value: string): string {
 export function renderBootstrapShell(props: BootstrapShellProps): string {
   const environment = escapeHtml(props.environment);
   const apiBasePath = escapeHtml(props.apiBasePath);
+  const phase = escapeHtml(props.phase);
+  const title = escapeHtml(phaseTitle(props.phase));
 
   return `<!DOCTYPE html>
 <html lang="id">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>QIMA — Phase 0 Bootstrap</title>
+<title>QIMA — ${title}</title>
 <link rel="stylesheet" href="/static/tokens.css">
 </head>
 <body>
 <header id="bootstrap-header">
   <p class="label">QIMA Platform</p>
-  <h1>Phase 0 — Project Bootstrap</h1>
+  <h1>${title}</h1>
   <p class="body-large">
-    Fondasi engineering QIMA aktif. Modul produk belum diimplementasikan pada fase ini.
+    Fondasi engineering dan skema data QIMA aktif. Modul produk belum
+    diimplementasikan pada fase ini.
   </p>
 </header>
 
@@ -52,6 +73,8 @@ export function renderBootstrapShell(props: BootstrapShellProps): string {
       <dd id="environment-value">${environment}</dd>
       <dt>API base path</dt>
       <dd id="api-base-path-value">${apiBasePath}</dd>
+      <dt>Phase</dt>
+      <dd id="phase-value">${phase}</dd>
     </dl>
   </section>
 
@@ -68,6 +91,9 @@ export function renderBootstrapShell(props: BootstrapShellProps): string {
       <li>Batas modul domain / shared / config</li>
       <li>Baseline lint, format, type-check, build, test</li>
       <li>Baseline tooling migrasi database</li>
+      <li>Skema database: organisasi, unit, site, domain mapping</li>
+      <li>Skema akses: user, role, permission, scope assignment</li>
+      <li>Skema audit log (append-only) &amp; settings</li>
     </ul>
   </section>
 </main>

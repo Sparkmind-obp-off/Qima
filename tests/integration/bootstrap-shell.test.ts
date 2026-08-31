@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import app from '../../src/index';
+import { QIMA_CURRENT_PHASE } from '../../apps/api/src/phase';
 
 /**
  * Integration tests — web surface + API composition boundary.
@@ -49,6 +50,33 @@ describe('GET /', () => {
     const html = await response.text();
 
     expect(html).not.toContain('integration-secret');
+  });
+});
+
+describe('phase reporting consistency', () => {
+  it('renders the phase the artifact actually implements', async () => {
+    const response = await app.request('/', {}, { APP_ENV: 'test' });
+    const html = await response.text();
+
+    expect(html).toContain(`id="phase-value">${QIMA_CURRENT_PHASE}<`);
+  });
+
+  it('never advertises a phase that disagrees with /api/v1/meta', async () => {
+    const metaResponse = await app.request('/api/v1/meta', {}, { APP_ENV: 'test' });
+    const meta = (await metaResponse.json()) as { data: { phase: string } };
+
+    const shellResponse = await app.request('/', {}, { APP_ENV: 'test' });
+    const html = await shellResponse.text();
+
+    expect(html).toContain(`id="phase-value">${meta.data.phase}<`);
+  });
+
+  it('does not label a database-foundation artifact as Phase 0 bootstrap', async () => {
+    const response = await app.request('/', {}, { APP_ENV: 'test' });
+    const html = await response.text();
+
+    expect(html).toContain('Phase 1 — Database Foundation');
+    expect(html).not.toContain('Phase 0 — Project Bootstrap');
   });
 });
 

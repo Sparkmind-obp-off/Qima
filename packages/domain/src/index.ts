@@ -1,18 +1,29 @@
 /**
- * QIMA domain core — Phase 0 scope/isolation primitives only.
+ * QIMA domain core.
  *
  * Traceability:
  * - doc 05 §10 Domain Layer: the domain must not depend on HTTP, React, a
  *   database driver, Cloudflare, or a storage provider. This module has no
- *   runtime imports for exactly that reason.
+ *   infrastructure imports for exactly that reason.
  * - doc 05 §13 Request Context / doc 08 §21 Scope Context.
  * - doc 08 §20 Authorization Contract: authorization is resolved server-side.
  * - .codex/IMPLEMENTATION_RULES.md §10 Multi-Tenancy / Isolation Rule:
  *   missing scope is a security defect, never a permissive default.
  *
- * Phase 0 boundary: business entities (Program, Activity, Participant,
- * Registration, ...) belong to Phase 3+ and are intentionally NOT defined here.
+ * Contents:
+ * - Phase 0: scope/isolation primitives (this file).
+ * - Phase 1: identity/organization entities, invariants, schema contract and
+ *   repository contracts (re-exported below).
+ *
+ * Phase boundary: operational business entities (Program, Activity,
+ * Participant, Registration, Attendance, Content) belong to Phase 4+ and are
+ * intentionally NOT defined here.
  */
+
+// Phase 1 — Database Foundation (doc 10 §24).
+export * from './identity';
+export * from './repositories';
+export * from './schema';
 
 /** Server-resolved authorization scope carried by every authenticated request. */
 export interface RequestContext {

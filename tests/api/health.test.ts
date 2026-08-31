@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import app from '../../src/index';
+import { QIMA_CURRENT_PHASE, QIMA_PHASE_IDS } from '../../apps/api/src/phase';
 
 /** QIMA envelope shape for assertions, avoiding `any` in tests. */
 interface TestEnvelope {
@@ -13,13 +14,16 @@ async function readEnvelope(response: Response): Promise<TestEnvelope> {
 }
 
 /**
- * API contract tests — Phase 0 infrastructure endpoints.
+ * API contract tests — infrastructure endpoints.
  *
  * Traceability: doc 05 §11 API Layer (`/api/v1` base path), doc 08 §17,
  * Quality Gate 6 (API Contract).
  *
- * Phase 0 exposes only infrastructure endpoints, so these tests assert the
- * transport contract and the absence of premature resource routes.
+ * These tests assert the transport contract of the infrastructure endpoints and
+ * the absence of premature resource routes. The `phase` field reported by
+ * `/meta` advances with the implemented phase, so it is asserted against the
+ * canonical phase identifier rather than a frozen Phase 0 literal — otherwise
+ * every phase transition would look like a regression instead of progress.
  */
 
 const baseEnv = { APP_ENV: 'test' } as const;
@@ -54,7 +58,16 @@ describe('GET /api/v1/meta', () => {
     expect(body.ok).toBe(true);
     expect(body.data?.authSecretConfigured).toBe(true);
     expect(body.data?.databaseBound).toBe(false);
-    expect(body.data?.phase).toBe('phase-0-bootstrap');
+    // The reported phase must be the declared current phase and must belong to
+    // the doc 10 §24 vocabulary — an invented or stale label is a defect.
+    expect(body.data?.phase).toBe(QIMA_CURRENT_PHASE);
+    expect(QIMA_PHASE_IDS).toContain(body.data?.phase);
+  });
+
+  it('reports the phase actually implemented by this artifact', async () => {
+    // Phase 1 is the Database Foundation (doc 10 §24). Guarding the value here
+    // keeps `/meta` honest: it may not advertise a phase whose scope is absent.
+    expect(QIMA_CURRENT_PHASE).toBe('phase-1-database-foundation');
   });
 });
 

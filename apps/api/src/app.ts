@@ -1,22 +1,26 @@
 /**
- * QIMA API surface — Phase 0 skeleton.
+ * QIMA API surface.
  *
  * Traceability:
  * - Phase 0 task T0.04 (Configure API application) — doc 10 §24.
+ * - Phase 1 (Database Foundation): the `/database/*` schema verification
+ *   routes — doc 10 §24 PHASE 1 exit criteria.
  * - doc 05 §11 API Layer: base path is `/api/v1`.
  * - doc 05 §12 API Rule / doc 08 §18 Controller Contract: controllers stay thin.
  * - doc 08 §13 Shared Module: responses use the shared envelope.
  *
- * Phase 0 boundary: this file exposes ONLY infrastructure endpoints
- * (`/health`, `/meta`). The resource routes listed in doc 08 §17
- * (auth, organizations, units, programs, ...) belong to Phase 1+ and are
- * deliberately NOT implemented here.
+ * Phase boundary: this file exposes infrastructure and schema-verification
+ * endpoints only. The tenant resource routes listed in doc 08 §17
+ * (auth, organizations, units, programs, ...) require the authentication and
+ * authorization stack from Phase 2+ and are deliberately NOT implemented here.
  */
 
 import { Hono } from 'hono';
 import { loadQimaConfig } from '@qima/config';
 import { ERROR_STATUS, failure, success } from '@qima/shared';
 import type { QimaBindings } from './bindings';
+import { databaseRoutes } from './modules/database/routes';
+import { QIMA_CURRENT_PHASE } from './phase';
 
 export const api = new Hono<{ Bindings: QimaBindings }>();
 
@@ -49,7 +53,7 @@ api.get('/meta', (c) => {
   return c.json(
     success({
       service: 'qima-api',
-      phase: 'phase-0-bootstrap',
+      phase: QIMA_CURRENT_PHASE,
       apiBasePath: config.apiBasePath,
       environment: config.appEnv,
       databaseBound: c.env?.DB !== undefined,
@@ -83,6 +87,13 @@ api.get('/health/database', async (c) => {
     );
   }
 });
+
+/**
+ * Phase 1 — Database Foundation routes (doc 10 §24).
+ *
+ * Registered before the catch-all so the wildcard below cannot shadow them.
+ */
+api.route('/database', databaseRoutes);
 
 /** Unknown API routes must not fall through to the web surface. */
 api.all('*', (c) =>
