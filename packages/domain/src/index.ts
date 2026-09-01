@@ -14,6 +14,7 @@
  * - Phase 0: scope/isolation primitives (this file).
  * - Phase 1: identity/organization entities, invariants, schema contract and
  *   repository contracts (re-exported below).
+ * - Phase 2: authentication credential policy and hashing contract.
  *
  * Phase boundary: operational business entities (Program, Activity,
  * Participant, Registration, Attendance, Content) belong to Phase 4+ and are
@@ -24,6 +25,9 @@
 export * from './identity';
 export * from './repositories';
 export * from './schema';
+
+// Phase 2 — Authentication & Access (doc 10 §24), task T2.01.
+export * from './authentication';
 
 /** Server-resolved authorization scope carried by every authenticated request. */
 export interface RequestContext {
