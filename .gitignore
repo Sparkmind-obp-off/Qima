@@ -32,3 +32,7 @@ Thumbs.db
 # Local secret overrides for `wrangler pages dev`
 .dev.vars
 .dev.vars.*
+
+# Uploaded / exported archives (never part of the source of truth)
+*.zip
+*.tar.gz
