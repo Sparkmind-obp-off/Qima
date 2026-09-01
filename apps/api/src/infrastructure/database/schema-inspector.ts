@@ -16,7 +16,12 @@
  * Read-only by design: this module never issues DDL.
  */
 
-import { PHASE1_REQUIRED_INDEXES, PHASE1_TABLES } from '@qima/domain';
+import {
+  PHASE1_REQUIRED_INDEXES,
+  PHASE1_TABLES,
+  PHASE2_REQUIRED_INDEXES,
+  PHASE2_TABLES,
+} from '@qima/domain';
 import { queryAll, type QimaDatabase } from './d1-client';
 
 export interface SchemaVerification {
@@ -51,13 +56,32 @@ export async function listIndexes(db: QimaDatabase): Promise<readonly string[]> 
  * precise, non-secret diagnostic (doc 08 §12).
  */
 export async function verifyPhase1Schema(db: QimaDatabase): Promise<SchemaVerification> {
+  return verifySchema(db, PHASE1_TABLES, PHASE1_REQUIRED_INDEXES);
+}
+
+/**
+ * Compare the live database against the Phase 2 schema contract (T2.02).
+ *
+ * Kept separate from the Phase 1 check so a deployment can report exactly which
+ * phase's migrations are missing, instead of a single opaque "schema incomplete".
+ */
+export async function verifyPhase2Schema(db: QimaDatabase): Promise<SchemaVerification> {
+  return verifySchema(db, PHASE2_TABLES, PHASE2_REQUIRED_INDEXES);
+}
+
+/** Shared comparison used by the per-phase verifiers. */
+async function verifySchema(
+  db: QimaDatabase,
+  requiredTables: readonly string[],
+  requiredIndexes: readonly string[],
+): Promise<SchemaVerification> {
   const [tables, indexes] = await Promise.all([listTables(db), listIndexes(db)]);
 
   const tableSet = new Set(tables);
   const indexSet = new Set(indexes);
 
-  const missingTables = PHASE1_TABLES.filter((table) => !tableSet.has(table));
-  const missingIndexes = PHASE1_REQUIRED_INDEXES.filter((index) => !indexSet.has(index));
+  const missingTables = requiredTables.filter((table) => !tableSet.has(table));
+  const missingIndexes = requiredIndexes.filter((index) => !indexSet.has(index));
 
   return {
     complete: missingTables.length === 0 && missingIndexes.length === 0,

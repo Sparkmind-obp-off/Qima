@@ -86,3 +86,44 @@ export const PHASE1_SCOPE_COLUMNS: Readonly<Record<string, readonly string[]>> =
  * these; the database enforces the same rule with triggers.
  */
 export const APPEND_ONLY_TABLES = ['audit_logs'] as const;
+
+// ---------------------------------------------------------------------------
+// Phase 2 — Authentication & Access (doc 10 §24)
+// ---------------------------------------------------------------------------
+
+/** Tables introduced by Phase 2 task T2.02 (Session management). */
+export const PHASE2_TABLES = ['sessions'] as const;
+
+export type Phase2Table = (typeof PHASE2_TABLES)[number];
+
+/**
+ * Indexes required by the Phase 2 session schema.
+ *
+ * `idx_sessions_token_hash` backs the lookup performed on every authenticated
+ * request; the other two back user-wide revocation and expiry sweeps.
+ */
+export const PHASE2_REQUIRED_INDEXES = [
+  'idx_sessions_token_hash',
+  'idx_sessions_user_id',
+  'idx_sessions_expires_at',
+] as const;
+
+/**
+ * Scope column for the session table.
+ *
+ * A session is owned by exactly one user, so `user_id` is its isolation
+ * boundary: no session read may omit it except the token-hash lookup, which is
+ * the operation that *establishes* identity (doc 06 §19).
+ */
+export const PHASE2_SCOPE_COLUMNS: Readonly<Record<string, readonly string[]>> = Object.freeze({
+  sessions: ['user_id'],
+});
+
+/**
+ * Columns of `sessions` that must never change after issuance.
+ *
+ * Rewriting a live session onto another account would be privilege escalation,
+ * so the database enforces this with a trigger and the contract records it
+ * here (doc 06 §42).
+ */
+export const SESSION_IMMUTABLE_COLUMNS = ['user_id', 'token_hash', 'created_at'] as const;
