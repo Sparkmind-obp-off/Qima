@@ -5,20 +5,23 @@
  * - Phase 0 task T0.04 (Configure API application) — doc 10 §24.
  * - Phase 1 (Database Foundation): the `/database/*` schema verification
  *   routes — doc 10 §24 PHASE 1 exit criteria.
+ * - Phase 2 (Authentication & Access): the `/auth/*` routes — doc 10 §24
+ *   PHASE 2, task T2.03 Login API.
  * - doc 05 §11 API Layer: base path is `/api/v1`.
  * - doc 05 §12 API Rule / doc 08 §18 Controller Contract: controllers stay thin.
  * - doc 08 §13 Shared Module: responses use the shared envelope.
  *
- * Phase boundary: this file exposes infrastructure and schema-verification
- * endpoints only. The tenant resource routes listed in doc 08 §17
- * (auth, organizations, units, programs, ...) require the authentication and
- * authorization stack from Phase 2+ and are deliberately NOT implemented here.
+ * Phase boundary: this file exposes infrastructure endpoints, schema
+ * verification and the login endpoint. The tenant resource routes listed in
+ * doc 08 §17 (organizations, units, programs, ...) require the authorization
+ * stack from T2.05-T2.09 and are deliberately NOT implemented here.
  */
 
 import { Hono } from 'hono';
 import { loadQimaConfig } from '@qima/config';
 import { ERROR_STATUS, failure, success } from '@qima/shared';
 import type { QimaBindings } from './bindings';
+import { authRoutes } from './modules/auth/routes';
 import { databaseRoutes } from './modules/database/routes';
 import { QIMA_CURRENT_PHASE } from './phase';
 
@@ -94,6 +97,14 @@ api.get('/health/database', async (c) => {
  * Registered before the catch-all so the wildcard below cannot shadow them.
  */
 api.route('/database', databaseRoutes);
+
+/**
+ * Phase 2 — Authentication & Access routes (doc 10 §24), task T2.03.
+ *
+ * Registered before the catch-all for the same reason as `/database`: the
+ * wildcard below would otherwise answer every `/auth/*` call with 404.
+ */
+api.route('/auth', authRoutes);
 
 /** Unknown API routes must not fall through to the web surface. */
 api.all('*', (c) =>

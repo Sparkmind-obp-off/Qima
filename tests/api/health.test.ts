@@ -125,10 +125,31 @@ describe('unknown API routes', () => {
     expect(body.error?.code).toBe('NOT_FOUND');
   });
 
-  it('confirms Phase 1+ resource routes are not implemented yet', async () => {
-    for (const path of ['/api/v1/auth/login', '/api/v1/organizations', '/api/v1/units']) {
+  /**
+   * Updated by T2.03 (.codex/IMPLEMENTATION_RULES.md §16): `/api/v1/auth/login`
+   * was previously asserted to be absent, which was correct while Phase 2 had
+   * no transport surface. The login endpoint now legitimately exists, so the
+   * assertion moves to the routes that are still genuinely unimplemented —
+   * organizations and units are Phase 3 (doc 10 §24).
+   */
+  it('confirms not-yet-implemented resource routes are absent', async () => {
+    for (const path of ['/api/v1/organizations', '/api/v1/units']) {
       const response = await app.request(path, {}, baseEnv);
       expect(response.status).toBe(404);
     }
+  });
+
+  /**
+   * Phase 2 is partially implemented: T2.03 supplies login, while logout
+   * (T2.04) and the user-context endpoint (T2.05+) do not exist yet. They must
+   * answer 404 rather than a stub, so a client cannot mistake a placeholder for
+   * a working capability (.codex/IMPLEMENTATION_RULES.md §3 Phase Rule).
+   */
+  it('confirms the remaining Phase 2 auth endpoints are not implemented yet', async () => {
+    const logout = await app.request('/api/v1/auth/logout', { method: 'POST' }, baseEnv);
+    expect(logout.status).toBe(404);
+
+    const me = await app.request('/api/v1/auth/me', {}, baseEnv);
+    expect(me.status).toBe(404);
   });
 });

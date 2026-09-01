@@ -1,8 +1,9 @@
 /**
- * QIMA authentication domain — Phase 2 task T2.01 (Authentication).
+ * QIMA authentication domain — Phase 2 tasks T2.01 (Authentication) and the
+ * credential-read contract required by T2.03 (Login API).
  *
  * Traceability:
- * - doc 10 §24 PHASE 2 — AUTHENTICATION & ACCESS, task T2.01.
+ * - doc 10 §24 PHASE 2 — AUTHENTICATION & ACCESS, tasks T2.01 and T2.03.
  * - doc 06 §42 API Security Contract: "Secure password handling".
  * - doc 05 §23 Authentication: the authentication *provider* is replaceable,
  *   so the domain must depend on a contract rather than on a hashing library.
@@ -10,18 +11,21 @@
  * - .codex/IMPLEMENTATION_RULES.md §6: validation is layered — the credential
  *   policy is a domain rule, mirrored (not replaced) by transport validation.
  *
- * Scope of this module: the credential *rules* and the hashing *contract*.
- * The actual cryptographic implementation is infrastructure and lives in
+ * Scope of this module: the credential *rules*, the hashing *contract*, and the
+ * narrow credential-read contract the login use case depends on. The actual
+ * cryptographic implementation is infrastructure and lives in
  * `apps/api/src/infrastructure/security`, which keeps the domain free of any
  * algorithm choice and lets the algorithm be replaced without touching a
  * business rule (doc 05 §23).
  *
- * Phase boundary: session issuance/validation (T2.02), the login and logout
- * endpoints (T2.03/T2.04) and authorization middleware (T2.09) are separate
- * tasks and are NOT defined here.
+ * Phase boundary: session issuance/validation (T2.02), the logout endpoint
+ * (T2.04) and authorization middleware (T2.09) are separate tasks and are NOT
+ * defined here. T2.03 orchestrates the pieces defined here; it does not add
+ * business rules of its own.
  */
 
 import { DomainValidationError } from './identity';
+import type { UserStatus } from './identity';
 
 // ---------------------------------------------------------------------------
 // Credential policy (doc 06 §42 "Secure password handling")
@@ -146,4 +150,57 @@ export const AUTHENTICATABLE_USER_STATUSES = ['active'] as const;
 
 export function canAuthenticate(status: string): boolean {
   return (AUTHENTICATABLE_USER_STATUSES as readonly string[]).includes(status);
+}
+
+// ---------------------------------------------------------------------------
+// Credential read contract (doc 06 §44, required by T2.03 Login API)
+// ---------------------------------------------------------------------------
+
+/**
+ * The credential record needed to authenticate one account, and nothing else.
+ *
+ * Why this exists as a SEPARATE contract instead of widening
+ * `UserRepository` (doc 06 §44) to return `password_hash`:
+ *
+ * `UserRepository` is the general-purpose user read used by every future
+ * feature — profile screens, member lists, audit rendering, reports. Adding a
+ * `passwordHash` field there would put credential material on the read path of
+ * code that has no business touching it, and one careless `c.json(user)` would
+ * publish a password hash. The Phase 1 implementation selects an explicit
+ * column list precisely so that cannot happen (Quality Gate 10), and T2.03 must
+ * not undo that.
+ *
+ * Instead, the credential read is its own capability with its own contract:
+ * exactly one caller (the login use case), exactly one reason to exist, and no
+ * `name`/`phone`/timestamps that would tempt a caller to use it as a general
+ * user lookup. The security boundary is therefore preserved rather than
+ * weakened — the hash becomes reachable through one auditable interface instead
+ * of through every user read in the system.
+ *
+ * `status` is included because authentication must be refused for a non-active
+ * account (see `canAuthenticate`) and the decision has to be made *before* a
+ * session is issued — an authorization check after the fact would be too late.
+ */
+export interface UserCredential {
+  readonly userId: string;
+  readonly status: UserStatus;
+  /** Encoded hash as produced by `PasswordHasher.hash`. Never returned to a client. */
+  readonly passwordHash: string;
+}
+
+/**
+ * Credential lookup used solely by authentication.
+ *
+ * Keyed by email only: login is the one operation that identifies an account by
+ * a client-supplied value, and there is deliberately no `findById` here —
+ * nothing in QIMA has a legitimate reason to fetch a password hash for a user
+ * it has already identified.
+ *
+ * Returns `null` for both "no such account" and "soft-deleted account", so the
+ * use case cannot accidentally derive an account-enumeration signal from the
+ * repository's return shape (doc 06 §42).
+ */
+export interface UserCredentialRepository {
+  /** `email` must already be normalized with `normalizeEmail`. */
+  findByEmail(email: string): Promise<UserCredential | null>;
 }

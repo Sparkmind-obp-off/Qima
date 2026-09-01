@@ -12,11 +12,21 @@ Implementation follows:
 
 ## Current Phase
 
-**Phase 0 — Project Bootstrap** — implemented and verified.
+- **Phase 0 — Project Bootstrap** — implemented and verified.
+- **Phase 1 — Database Foundation** — implemented and verified.
+- **Phase 2 — Authentication & Access** — **in progress**: T2.01 credential
+  policy + password hashing, T2.02 session management, and T2.03 Login API are
+  implemented and verified. T2.04 onwards are not implemented.
 
-Phase 0 delivers the engineering foundation only. Product functionality
-(authentication, organizations, units, programs, dashboards) belongs to
-Phase 1+ and is deliberately not implemented — see
+`QIMA_CURRENT_PHASE` (`apps/api/src/phase.ts`) therefore still reports
+`phase-1-database-foundation`: a phase identifier may only advance when the
+phase's doc 10 §24 exit criteria are fully met, and Phase 2 still owes logout,
+authentication context and authorization middleware
+(.codex/IMPLEMENTATION_RULES.md §3 Phase Rule). Reporting `phase-2` now would
+advertise capability that does not exist.
+
+Product functionality beyond the above (organizations, units, programs,
+dashboards) is deliberately not implemented — see
 [`.codex/PHASE_0_EXECUTION_SCOPE.md`](.codex/PHASE_0_EXECUTION_SCOPE.md) §4
 Explicit Non-Goals.
 
@@ -73,6 +83,43 @@ implementation, QA, and execution contracts.
 - CI quality-gate workflow
 - Cloudflare Pages build + local runtime verified
 
+## Phase 1 — Completed Baseline
+
+- Identity / organization / unit schema with scope-isolation constraints
+- Access control schema (roles, permissions, assignments)
+- Audit and settings schema
+- Repository contracts in the domain, D1 adapters in infrastructure
+- Reference seed data, plus `/api/v1/database/*` schema-verification endpoints
+
+## Phase 2 — Implemented Tasks
+
+| Task  | Scope                                            | Status      |
+| ----- | ------------------------------------------------ | ----------- |
+| T2.01 | Credential policy + PBKDF2 password hashing       | Complete    |
+| T2.02 | Session schema, token service, session repository | Complete    |
+| T2.03 | Login API (`POST /api/v1/auth/login`)             | Complete    |
+| T2.04 | Logout API                                       | Not started |
+| T2.05+ | Authentication context, authorization middleware | Not started |
+
+T2.03 composes the pieces above rather than adding business rules of its own:
+
+```text
+request → transport shape check → credential lookup → password verification
+        → account status rule → session token issuance → session persistence
+        → authentication response
+```
+
+Layer ownership (doc 08 §10/§12):
+
+- `apps/api/src/modules/auth/routes.ts` — transport only: JSON shape, header
+  provenance, status mapping. It makes no authentication decision.
+- `apps/api/src/application/authentication/login-user.ts` — the decision, and
+  the anti-enumeration and session-issuance ordering guarantees.
+- `apps/api/src/infrastructure/database/user-credential-repository.ts` — the
+  single credential read.
+- `packages/domain/src/authentication.ts` — the rules (`canAuthenticate`,
+  `normalizeEmail`) and the `UserCredentialRepository` contract.
+
 ## Functional Entry Points
 
 | Method | Path                      | Response      | Purpose                                        |
@@ -86,7 +133,50 @@ implementation, QA, and execution contracts.
 | GET    | `/static/tokens.css`      | 200 CSS       | Design tokens                                   |
 | GET    | `/static/bootstrap.js`    | 200 JS        | Shell client script                             |
 
-No path accepts query parameters in Phase 0.
+Phase 2 (T2.03) adds one authenticated-access entry point:
+
+| Method | Path                  | Response       | Purpose                        |
+| ------ | --------------------- | -------------- | ------------------------------ |
+| POST   | `/api/v1/auth/login`  | 200 / 400 / 401 / 500 JSON | Authenticate and issue a session |
+
+Request body (doc 06 §23) — JSON only, no query parameters:
+
+```json
+{ "email": "user@example.com", "password": "…" }
+```
+
+Success response:
+
+```json
+{
+  "ok": true,
+  "data": {
+    "user": { "id": "…", "name": "…", "email": "…", "status": "active" },
+    "access_token": "…",
+    "expires_at": "2026-01-01T12:00:00Z"
+  }
+}
+```
+
+Status contract:
+
+- `400 VALIDATION_ERROR` — body is not JSON, or `email`/`password` is missing,
+  non-string, empty, or the password exceeds 256 characters (a CPU-exhaustion
+  bound on an unauthenticated endpoint).
+- `401 UNAUTHENTICATED` — wrong password, unknown email, non-active account, or
+  a soft-deleted account. All four return a **byte-identical** body, because a
+  differentiated response would reveal which emails are registered
+  (doc 06 §42). The password is verified on every path — including the unknown
+  account path, against a decoy hash — so response latency cannot be used as an
+  enumeration oracle either.
+- `500 INTERNAL_ERROR` — the D1 binding is missing or a query failed. An
+  infrastructure fault is never reported as invalid credentials.
+
+The `access_token` is returned exactly once; only its SHA-256 hash is stored in
+`sessions.token_hash`. No path accepts credentials in a URL — `GET
+/api/v1/auth/login` is 404, so credentials cannot be captured by access logs.
+
+No other path accepts query parameters.
 
 ### Response Envelope
 
@@ -104,9 +194,17 @@ Error codes: `VALIDATION_ERROR`, `UNAUTHENTICATED`, `FORBIDDEN`, `NOT_FOUND`,
 
 - **Storage**: Cloudflare D1 (binding `DB`, database `qima-production`)
 - **Migrations**: `database/migrations`, applied via wrangler
-- **Phase 0 schema**: `qima_schema_baseline` only — a migration-tooling marker.
-  No business tables exist yet; entities are owned by Phase 1
-  (doc 10 §24 Phase 1 — Database Foundation).
+- **Schema**: migrations `0000`–`0003` deliver the Phase 1 identity, access
+  control, audit and settings schema; migration `0004` adds the Phase 2
+  `sessions` table (T2.02).
+- **Credential boundary**: `users.password_hash` is selected by exactly ONE
+  module, `apps/api/src/infrastructure/database/user-credential-repository.ts`.
+  The general user read (`createUserRepository`) selects an explicit column list
+  that excludes it, so credential material cannot leak through a profile,
+  listing or reporting read. This is asserted by a test, not only by convention.
+- **Sessions**: store a hex SHA-256 `token_hash`, never a raw token. Lifetime is
+  an absolute 12 hours (`SESSION_TTL_SECONDS`), not an idle timeout, so a leaked
+  token has a hard ceiling on its value.
 - **Secrets**: never in the repository. `AUTH_SECRET` and any provider token are
   provisioned as deployment secrets; `.dev.vars` (git-ignored) is used locally.
 - **`database_id` in `wrangler.jsonc`** is an all-zero placeholder, not a real
@@ -155,9 +253,13 @@ curl http://localhost:3000/api/v1/health/database
 
 The suite follows the doc 09 testing pyramid:
 
-- `tests/unit/` — config resolution, shared envelope, domain scope rules
-- `tests/api/` — API contract and secret-leakage assertions
-- `tests/integration/` — surface composition, request boundary, build artifact
+- `tests/unit/` — config resolution, shared envelope, domain scope rules,
+  credential policy, password hasher, session domain/token service, and the
+  login use case (T2.03)
+- `tests/api/` — API contract and secret-leakage assertions, including the
+  `/api/v1/auth/login` contract (T2.03)
+- `tests/integration/` — surface composition, request boundary, build artifact,
+  migrations, repository isolation, and the credential repository (T2.03)
 - `tests/e2e/` — Phase 3+, excluded from `npm test` so an empty suite can never
   be misreported as coverage
 
@@ -174,23 +276,34 @@ dropped during bundling) passed every source test while failing at runtime.
   the plugin default `src/index.tsx` does not exist in this repository)
 - **Tech stack**: Hono + TypeScript + Vite + Cloudflare D1
 - **Runtime verification**: `/`, `/api/v1/health`, `/api/v1/meta`,
-  `/api/v1/health/database`, static assets and the 404 boundary
-- **Status**: Phase 0 verified locally on the Workers runtime
+  `/api/v1/health/database`, `POST /api/v1/auth/login`, static assets and the
+  404 boundary
+- **Status**: Phase 0, Phase 1 and Phase 2 tasks T2.01–T2.03 verified locally on
+  the Workers runtime. Not yet deployed to Cloudflare production.
 
 Deployment requires a Cloudflare account with a provisioned D1 database; the
 account owner supplies `database_id` and any secret at deploy time.
 
-## Not Yet Implemented (Phase 1+)
+## Not Yet Implemented
 
-- Authentication and session handling (Phase 2)
-- Organization / unit / program domain entities and endpoints (Phase 1)
-- Business database schema and seed data (Phase 1)
-- Product UI screens beyond the bootstrap shell (Phase 3+)
+- `POST /api/v1/auth/logout` — session revocation (T2.04)
+- Authentication context / `GET /api/v1/auth/me` (T2.05)
+- Authorization middleware, role and permission resolution (T2.06–T2.09)
+- Audit logging of authentication events. `LOGIN` is in the doc 06 §15 action
+  vocabulary and migration 0003 anticipates it, but an honest trail needs the
+  tenant scope resolved by T2.05/T2.08 and a transactional boundary the current
+  `QimaDatabase` contract does not expose. Recorded as a known limitation rather
+  than half-implemented.
+- Login rate limiting / lockout. The endpoint bounds password length and
+  equalizes response timing, but throttling repeated attempts needs a shared
+  counter (D1 or KV) and belongs with the wider authentication hardening task.
+- Organization / unit / program endpoints (Phase 3)
+- Product UI screens beyond the bootstrap shell, including a login screen
 - End-to-end critical journey tests (Phase 3+)
 - Reporting, billing and external integrations (later phases)
 
 ## Next Recommended Step
 
-Phase 1 — Database Foundation (doc 10 §24): define the approved organization /
-unit / program entities as D1 migrations, with scope-isolation tests before any
-endpoint is exposed.
+T2.04 — Logout API (doc 10 §24 Phase 2): revoke the session identified by the
+presented bearer token, using the `SessionRepository.revoke` contract that
+already exists from T2.02.
