@@ -22,8 +22,9 @@ Implementation follows:
 - **Phase 0 — Project Bootstrap** — implemented and verified.
 - **Phase 1 — Database Foundation** — implemented and verified.
 - **Phase 2 — Authentication & Access** — **in progress**: T2.01 credential
-  policy + password hashing, T2.02 session management, T2.03 Login API, and
-  T2.04 Logout API are implemented and verified. T2.05 onwards are not implemented.
+  policy + password hashing, T2.02 session management, T2.03 Login API,
+  T2.04 Logout API, and T2.05 User Context are implemented and verified.
+  T2.06 onwards are not implemented.
 
 `QIMA_CURRENT_PHASE` (`apps/api/src/phase.ts`) therefore still reports
 `phase-1-database-foundation`: a phase identifier may only advance when the
@@ -106,7 +107,8 @@ implementation, QA, and execution contracts.
 | T2.02 | Session schema, token service, session repository | Complete    |
 | T2.03 | Login API (`POST /api/v1/auth/login`)             | Complete    |
 | T2.04 | Logout API (`POST /api/v1/auth/logout`)           | Complete    |
-| T2.05+ | Authentication context, authorization middleware | Not started |
+| T2.05 | User context (`GET /api/v1/auth/me`)               | Complete    |
+| T2.06+ | Role/permission/scope resolution and middleware   | Not started |
 
 T2.03 composes the pieces above rather than adding business rules of its own:
 
@@ -128,6 +130,8 @@ Layer ownership (doc 08 §10/§12):
   `normalizeEmail`) and the `UserCredentialRepository` contract.
 - `apps/api/src/application/authentication/logout-user.ts` — hashes the presented
   token, validates the session through domain rules, and revokes only that session.
+- `apps/api/src/application/authentication/get-current-user.ts` — resolves an active
+  bearer session to its still-active user and records successful session activity.
 
 ## Functional Entry Points
 
@@ -142,12 +146,13 @@ Layer ownership (doc 08 §10/§12):
 | GET    | `/static/tokens.css`      | 200 CSS       | Design tokens                                   |
 | GET    | `/static/bootstrap.js`    | 200 JS        | Shell client script                             |
 
-Phase 2 tasks T2.03–T2.04 add authentication entry points:
+Phase 2 tasks T2.03–T2.05 add authentication entry points:
 
 | Method | Path                  | Response       | Purpose                        |
 | ------ | --------------------- | -------------- | ------------------------------ |
 | POST   | `/api/v1/auth/login`  | 200 / 400 / 401 / 500 JSON | Authenticate and issue a session |
 | POST   | `/api/v1/auth/logout` | 200 / 401 / 500 JSON       | Revoke the presented active session |
+| GET    | `/api/v1/auth/me`     | 200 / 401 / 500 JSON       | Resolve the active session user     |
 
 Request body (doc 06 §23) — JSON only, no query parameters:
 
@@ -193,6 +198,13 @@ Logout requires `Authorization: Bearer <access_token>`. A successful request ret
 expired, and already-revoked tokens all return the same `401 UNAUTHENTICATED`
 response, so the endpoint cannot disclose session state. The raw token is hashed
 before lookup and never reaches D1.
+
+`GET /api/v1/auth/me` uses the same strict bearer boundary. It returns only the
+public user projection (`id`, `name`, `email`, `status`) for an active session whose
+user still exists and remains active, then updates `sessions.last_used_at`. A user
+suspended, deactivated, or soft-deleted after login is rejected. Organization,
+unit, role, and permission context is deliberately not fabricated by T2.05; those
+server-resolved fields remain T2.06–T2.08.
 
 ### Response Envelope
 
@@ -271,9 +283,9 @@ The suite follows the doc 09 testing pyramid:
 
 - `tests/unit/` — config resolution, shared envelope, domain scope rules,
   credential policy, password hasher, session domain/token service, and the
-  login use case (T2.03)
+  login/logout/current-user use cases (T2.03–T2.05)
 - `tests/api/` — API contract and secret-leakage assertions, including the
-  login and logout contracts (T2.03–T2.04)
+  login, logout, and current-user contracts (T2.03–T2.05)
 - `tests/integration/` — surface composition, request boundary, build artifact,
   migrations, repository isolation, and the credential repository (T2.03)
 - `tests/e2e/` — Phase 3+, excluded from `npm test` so an empty suite can never
@@ -293,9 +305,10 @@ dropped during bundling) passed every source test while failing at runtime.
 - **Tech stack**: Hono + TypeScript + Vite + Cloudflare D1
 - **Runtime verification**: `/`, `/api/v1/health`, `/api/v1/meta`,
   `/api/v1/health/database`, `POST /api/v1/auth/login`,
-  `POST /api/v1/auth/logout`, static assets and the 404 boundary
+  `POST /api/v1/auth/logout`, `GET /api/v1/auth/me`, static assets and the 404 boundary
 - **Status**: Active at https://qima.pages.dev. Phase 0, Phase 1 and Phase 2
-  tasks T2.01–T2.04 are verified locally and on Cloudflare production.
+  tasks T2.01–T2.05 are verified locally. Production verification is recorded
+  after each successful deployment.
 - **Production data**: D1 migrations `0000`–`0004` are applied to
   `qima-production`; deterministic role/permission seeds are applied.
 - **Last deployed**: 2026-09-03 via the BYOK Cloudflare Pages workflow.
@@ -306,8 +319,10 @@ owner supplies the real binding and any secret only during deployment.
 
 ## Not Yet Implemented
 
-- Authentication context / `GET /api/v1/auth/me` (T2.05)
-- Authorization middleware, role and permission resolution (T2.06–T2.09)
+- Role resolution (T2.06), permission resolution (T2.07), scope context (T2.08),
+  and authorization middleware (T2.09)
+- Complete `/api/v1/auth/me` organization/unit/permission context depends on
+  T2.06–T2.08; T2.05 currently returns the authenticated public user only.
 - Audit logging of authentication events. `LOGIN` is in the doc 06 §15 action
   vocabulary and migration 0003 anticipates it, but an honest trail needs the
   tenant scope resolved by T2.05/T2.08 and a transactional boundary the current
@@ -323,6 +338,5 @@ owner supplies the real binding and any secret only during deployment.
 
 ## Next Recommended Step
 
-T2.05 — User context (doc 10 §24 Phase 2): resolve the authenticated user from
-the presented bearer token and expose `GET /api/v1/auth/me` without yet
-inventing the role, permission, or scope resolution assigned to T2.06–T2.08.
+T2.06 — Role resolution (doc 10 §24 Phase 2): resolve server-owned role
+assignments for the authenticated user without trusting client-provided scope.

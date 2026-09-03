@@ -1,29 +1,30 @@
 /**
- * QIMA authentication routes — Phase 2 tasks T2.03 (Login API) and T2.04 (Logout).
+ * QIMA authentication routes — Phase 2 tasks T2.03-T2.05.
  *
  * Traceability:
- * - doc 10 §24 PHASE 2 — AUTHENTICATION & ACCESS, tasks T2.03 Login API and
- *   T2.04 Logout.
- * - doc 06 §23 AUTH API: login issues a token and `POST /api/v1/auth/logout`
- *   invalidates the active authentication session represented by that token.
+ * - doc 10 §24 PHASE 2 — AUTHENTICATION & ACCESS, tasks T2.03 Login API,
+ *   T2.04 Logout and T2.05 User context.
+ * - doc 06 §23 AUTH API: login issues a token, logout invalidates its active
+ *   session, and `GET /api/v1/auth/me` returns the authenticated user.
  * - doc 06 §21 API Response Contract / §22 HTTP Status Contract.
  * - doc 06 §42 API Security Contract: no account-enumeration signal.
  * - doc 08 §12 Presentation Layer, §18 Controller Contract, §43 Domain Service
  *   Boundary: the controller performs transport work only and delegates the
  *   authentication decision to the use case.
  *
- * SCOPE — T2.03 and T2.04 only. `GET /auth/me` needs the user-context and
- * permission resolution of T2.05-T2.08, so it is not registered here. Declaring
- * it now as a stub would let a client believe a capability exists that does not
- * (.codex/IMPLEMENTATION_RULES.md §3).
+ * SCOPE — T2.03-T2.05 only. `/auth/me` resolves the authenticated user; the
+ * organization, unit, role and permission arrays in the complete doc 06 §23
+ * response remain T2.06-T2.08 and are not fabricated here.
  *
  * SECURITY BOUNDARY — login is intentionally unauthenticated (it is how
- * authentication begins), while logout requires an active bearer session.
- * Neither route logs credentials or tokens, and no raw token reaches a repository.
+ * authentication begins), while logout and current-user lookup require an active
+ * bearer session. No route logs credentials or tokens, and no raw token reaches
+ * a repository.
  */
 
 import { Hono } from 'hono';
 import { ERROR_STATUS, failure, success } from '@qima/shared';
+import { getCurrentUser } from '../../application/authentication/get-current-user';
 import { loginUser } from '../../application/authentication/login-user';
 import type { LoginFailureReason } from '../../application/authentication/login-user';
 import { logoutUser } from '../../application/authentication/logout-user';
@@ -74,7 +75,7 @@ function readCredentials(body: unknown): { email: string; password: string } | n
  *
  * An explicit projection rather than passing the entity through: the `User`
  * contract has no credential field today, and this mapping means a future field
- * added to the entity cannot appear in an unauthenticated response by default.
+ * added to the entity cannot appear in an authentication response by default.
  * Field names are snake_case to match the published API contract, while the
  * domain stays camelCase.
  */
@@ -210,6 +211,57 @@ authRoutes.post('/login', async (c) => {
     // forbids leaking internal detail outward.
     return c.json(
       failure('INTERNAL_ERROR', 'Authentication could not be completed.'),
+      ERROR_STATUS.INTERNAL_ERROR,
+    );
+  }
+});
+
+/**
+ * `GET /api/v1/auth/me` (doc 06 §23, T2.05).
+ *
+ * This slice returns only the user portion of the eventual context. It does not
+ * manufacture empty organization, unit or permission arrays before T2.06-T2.08
+ * can resolve those values from server-owned assignments.
+ */
+authRoutes.get('/me', async (c) => {
+  const token = readBearerToken(c.req.header('authorization'));
+
+  if (token === null) {
+    return c.json(
+      failure('UNAUTHENTICATED', 'A valid bearer token is required.'),
+      ERROR_STATUS.UNAUTHENTICATED,
+    );
+  }
+
+  const db = resolveDatabase(c.env);
+  if (db === null) {
+    return c.json(
+      failure('INTERNAL_ERROR', 'Database binding is not configured for this environment.'),
+      ERROR_STATUS.INTERNAL_ERROR,
+    );
+  }
+
+  try {
+    const result = await getCurrentUser(
+      { token },
+      {
+        sessions: createSessionRepository(db),
+        sessionTokens: webCryptoSessionTokenService,
+        users: createUserRepository(db),
+      },
+    );
+
+    if (!result.ok) {
+      return c.json(
+        failure('UNAUTHENTICATED', 'A valid bearer token is required.'),
+        ERROR_STATUS.UNAUTHENTICATED,
+      );
+    }
+
+    return c.json(success({ user: publicUser(result.user) }));
+  } catch {
+    return c.json(
+      failure('INTERNAL_ERROR', 'User context could not be resolved.'),
       ERROR_STATUS.INTERNAL_ERROR,
     );
   }

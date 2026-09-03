@@ -138,14 +138,4 @@ describe('unknown API routes', () => {
       expect(response.status).toBe(404);
     }
   });
-
-  /**
-   * Updated by T2.04: logout now legitimately exists. User context (T2.05+)
-   * remains absent and must answer 404 rather than a stub, so a client cannot
-   * mistake a placeholder for a working capability.
-   */
-  it('confirms the next Phase 2 auth endpoint is not implemented yet', async () => {
-    const me = await app.request('/api/v1/auth/me', {}, baseEnv);
-    expect(me.status).toBe(404);
-  });
 });
