@@ -1,36 +1,40 @@
 /**
- * QIMA authentication routes — Phase 2 task T2.03 (Login API).
+ * QIMA authentication routes — Phase 2 tasks T2.03 (Login API) and T2.04 (Logout).
  *
  * Traceability:
- * - doc 10 §24 PHASE 2 — AUTHENTICATION & ACCESS, task T2.03 Login API.
- * - doc 06 §23 AUTH API: `POST /api/v1/auth/login`, request `{ email, password }`,
- *   response `{ data: { user, access_token, expires_at } }`.
+ * - doc 10 §24 PHASE 2 — AUTHENTICATION & ACCESS, tasks T2.03 Login API and
+ *   T2.04 Logout.
+ * - doc 06 §23 AUTH API: login issues a token and `POST /api/v1/auth/logout`
+ *   invalidates the active authentication session represented by that token.
  * - doc 06 §21 API Response Contract / §22 HTTP Status Contract.
  * - doc 06 §42 API Security Contract: no account-enumeration signal.
  * - doc 08 §12 Presentation Layer, §18 Controller Contract, §43 Domain Service
  *   Boundary: the controller performs transport work only and delegates the
  *   authentication decision to the use case.
  *
- * SCOPE — T2.03 only. `POST /auth/logout` is T2.04 and `GET /auth/me` needs the
- * user-context and permission resolution of T2.05-T2.08, so neither is
- * registered here. Declaring them now as stubs would let a client believe a
- * capability exists that does not (.codex/IMPLEMENTATION_RULES.md §3).
+ * SCOPE — T2.03 and T2.04 only. `GET /auth/me` needs the user-context and
+ * permission resolution of T2.05-T2.08, so it is not registered here. Declaring
+ * it now as a stub would let a client believe a capability exists that does not
+ * (.codex/IMPLEMENTATION_RULES.md §3).
  *
- * SECURITY BOUNDARY — this endpoint is intentionally unauthenticated (it is how
- * authentication begins) but it is NOT unprotected: it never echoes a submitted
- * password, never reveals whether an email is registered, and never returns a
- * password hash. Nothing in this file logs the request body.
+ * SECURITY BOUNDARY — login is intentionally unauthenticated (it is how
+ * authentication begins), while logout requires an active bearer session.
+ * Neither route logs credentials or tokens, and no raw token reaches a repository.
  */
 
 import { Hono } from 'hono';
 import { ERROR_STATUS, failure, success } from '@qima/shared';
 import { loginUser } from '../../application/authentication/login-user';
 import type { LoginFailureReason } from '../../application/authentication/login-user';
+import { logoutUser } from '../../application/authentication/logout-user';
 import { createSessionRepository } from '../../infrastructure/database/session-repository';
 import { createUserCredentialRepository } from '../../infrastructure/database/user-credential-repository';
 import { createUserRepository } from '../../infrastructure/database/repositories';
 import { webCryptoPasswordHasher } from '../../infrastructure/security/password-hasher';
-import { webCryptoSessionTokenService } from '../../infrastructure/security/session-token-service';
+import {
+  isWellFormedSessionToken,
+  webCryptoSessionTokenService,
+} from '../../infrastructure/security/session-token-service';
 import type { QimaDatabase } from '../../infrastructure/database/d1-client';
 import type { QimaBindings } from '../../bindings';
 
@@ -112,6 +116,23 @@ function failureResponse(reason: LoginFailureReason): {
 }
 
 /**
+ * Read one RFC 6750-style bearer credential without accepting ambiguous input.
+ *
+ * Shape validation is intentionally transport-level; authenticity remains an
+ * application/domain decision.
+ */
+function readBearerToken(authorization: string | undefined): string | null {
+  if (authorization === undefined) {
+    return null;
+  }
+
+  const match = /^Bearer ([^\s,]+)$/i.exec(authorization);
+  const token = match?.[1];
+
+  return token !== undefined && isWellFormedSessionToken(token) ? token : null;
+}
+
+/**
  * `POST /api/v1/auth/login` (doc 06 §23).
  *
  * 200 on success, 400 on a malformed request, 401 on any authentication
@@ -189,6 +210,56 @@ authRoutes.post('/login', async (c) => {
     // forbids leaking internal detail outward.
     return c.json(
       failure('INTERNAL_ERROR', 'Authentication could not be completed.'),
+      ERROR_STATUS.INTERNAL_ERROR,
+    );
+  }
+});
+
+/**
+ * `POST /api/v1/auth/logout` (doc 06 §23, T2.04).
+ *
+ * 200 after revoking the active session, 401 for every missing, malformed,
+ * unknown, expired or already-revoked credential, and 500 only for an actual
+ * infrastructure failure. Invalid-session responses are deliberately identical.
+ */
+authRoutes.post('/logout', async (c) => {
+  const token = readBearerToken(c.req.header('authorization'));
+
+  if (token === null) {
+    return c.json(
+      failure('UNAUTHENTICATED', 'A valid bearer token is required.'),
+      ERROR_STATUS.UNAUTHENTICATED,
+    );
+  }
+
+  const db = resolveDatabase(c.env);
+  if (db === null) {
+    return c.json(
+      failure('INTERNAL_ERROR', 'Database binding is not configured for this environment.'),
+      ERROR_STATUS.INTERNAL_ERROR,
+    );
+  }
+
+  try {
+    const result = await logoutUser(
+      { token },
+      {
+        sessions: createSessionRepository(db),
+        sessionTokens: webCryptoSessionTokenService,
+      },
+    );
+
+    if (!result.ok) {
+      return c.json(
+        failure('UNAUTHENTICATED', 'A valid bearer token is required.'),
+        ERROR_STATUS.UNAUTHENTICATED,
+      );
+    }
+
+    return c.json(success({ logged_out: true }));
+  } catch {
+    return c.json(
+      failure('INTERNAL_ERROR', 'Logout could not be completed.'),
       ERROR_STATUS.INTERNAL_ERROR,
     );
   }

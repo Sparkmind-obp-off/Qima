@@ -6,13 +6,13 @@
  * - Phase 1 (Database Foundation): the `/database/*` schema verification
  *   routes — doc 10 §24 PHASE 1 exit criteria.
  * - Phase 2 (Authentication & Access): the `/auth/*` routes — doc 10 §24
- *   PHASE 2, task T2.03 Login API.
+ *   PHASE 2, tasks T2.03 Login API and T2.04 Logout.
  * - doc 05 §11 API Layer: base path is `/api/v1`.
  * - doc 05 §12 API Rule / doc 08 §18 Controller Contract: controllers stay thin.
  * - doc 08 §13 Shared Module: responses use the shared envelope.
  *
  * Phase boundary: this file exposes infrastructure endpoints, schema
- * verification and the login endpoint. The tenant resource routes listed in
+ * verification and the login/logout endpoints. The tenant resource routes listed in
  * doc 08 §17 (organizations, units, programs, ...) require the authorization
  * stack from T2.05-T2.09 and are deliberately NOT implemented here.
  */
@@ -99,7 +99,7 @@ api.get('/health/database', async (c) => {
 api.route('/database', databaseRoutes);
 
 /**
- * Phase 2 — Authentication & Access routes (doc 10 §24), task T2.03.
+ * Phase 2 — Authentication & Access routes (doc 10 §24), tasks T2.03–T2.04.
  *
  * Registered before the catch-all for the same reason as `/database`: the
  * wildcard below would otherwise answer every `/auth/*` call with 404.

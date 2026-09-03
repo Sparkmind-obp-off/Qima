@@ -15,12 +15,12 @@ Implementation follows:
 - **Phase 0 — Project Bootstrap** — implemented and verified.
 - **Phase 1 — Database Foundation** — implemented and verified.
 - **Phase 2 — Authentication & Access** — **in progress**: T2.01 credential
-  policy + password hashing, T2.02 session management, and T2.03 Login API are
-  implemented and verified. T2.04 onwards are not implemented.
+  policy + password hashing, T2.02 session management, T2.03 Login API, and
+  T2.04 Logout API are implemented and verified. T2.05 onwards are not implemented.
 
 `QIMA_CURRENT_PHASE` (`apps/api/src/phase.ts`) therefore still reports
 `phase-1-database-foundation`: a phase identifier may only advance when the
-phase's doc 10 §24 exit criteria are fully met, and Phase 2 still owes logout,
+phase's doc 10 §24 exit criteria are fully met, and Phase 2 still owes
 authentication context and authorization middleware
 (.codex/IMPLEMENTATION_RULES.md §3 Phase Rule). Reporting `phase-2` now would
 advertise capability that does not exist.
@@ -98,7 +98,7 @@ implementation, QA, and execution contracts.
 | T2.01 | Credential policy + PBKDF2 password hashing       | Complete    |
 | T2.02 | Session schema, token service, session repository | Complete    |
 | T2.03 | Login API (`POST /api/v1/auth/login`)             | Complete    |
-| T2.04 | Logout API                                       | Not started |
+| T2.04 | Logout API (`POST /api/v1/auth/logout`)           | Complete    |
 | T2.05+ | Authentication context, authorization middleware | Not started |
 
 T2.03 composes the pieces above rather than adding business rules of its own:
@@ -119,6 +119,8 @@ Layer ownership (doc 08 §10/§12):
   single credential read.
 - `packages/domain/src/authentication.ts` — the rules (`canAuthenticate`,
   `normalizeEmail`) and the `UserCredentialRepository` contract.
+- `apps/api/src/application/authentication/logout-user.ts` — hashes the presented
+  token, validates the session through domain rules, and revokes only that session.
 
 ## Functional Entry Points
 
@@ -133,11 +135,12 @@ Layer ownership (doc 08 §10/§12):
 | GET    | `/static/tokens.css`      | 200 CSS       | Design tokens                                   |
 | GET    | `/static/bootstrap.js`    | 200 JS        | Shell client script                             |
 
-Phase 2 (T2.03) adds one authenticated-access entry point:
+Phase 2 tasks T2.03–T2.04 add authentication entry points:
 
 | Method | Path                  | Response       | Purpose                        |
 | ------ | --------------------- | -------------- | ------------------------------ |
 | POST   | `/api/v1/auth/login`  | 200 / 400 / 401 / 500 JSON | Authenticate and issue a session |
+| POST   | `/api/v1/auth/logout` | 200 / 401 / 500 JSON       | Revoke the presented active session |
 
 Request body (doc 06 §23) — JSON only, no query parameters:
 
@@ -177,6 +180,12 @@ The `access_token` is returned exactly once; only its SHA-256 hash is stored in
 /api/v1/auth/login` is 404, so credentials cannot be captured by access logs.
 
 No other path accepts query parameters.
+
+Logout requires `Authorization: Bearer <access_token>`. A successful request returns
+`{ "ok": true, "data": { "logged_out": true } }`. Missing, malformed, unknown,
+expired, and already-revoked tokens all return the same `401 UNAUTHENTICATED`
+response, so the endpoint cannot disclose session state. The raw token is hashed
+before lookup and never reaches D1.
 
 ### Response Envelope
 
@@ -257,7 +266,7 @@ The suite follows the doc 09 testing pyramid:
   credential policy, password hasher, session domain/token service, and the
   login use case (T2.03)
 - `tests/api/` — API contract and secret-leakage assertions, including the
-  `/api/v1/auth/login` contract (T2.03)
+  login and logout contracts (T2.03–T2.04)
 - `tests/integration/` — surface composition, request boundary, build artifact,
   migrations, repository isolation, and the credential repository (T2.03)
 - `tests/e2e/` — Phase 3+, excluded from `npm test` so an empty suite can never
@@ -276,9 +285,9 @@ dropped during bundling) passed every source test while failing at runtime.
   the plugin default `src/index.tsx` does not exist in this repository)
 - **Tech stack**: Hono + TypeScript + Vite + Cloudflare D1
 - **Runtime verification**: `/`, `/api/v1/health`, `/api/v1/meta`,
-  `/api/v1/health/database`, `POST /api/v1/auth/login`, static assets and the
-  404 boundary
-- **Status**: Phase 0, Phase 1 and Phase 2 tasks T2.01–T2.03 verified locally on
+  `/api/v1/health/database`, `POST /api/v1/auth/login`,
+  `POST /api/v1/auth/logout`, static assets and the 404 boundary
+- **Status**: Phase 0, Phase 1 and Phase 2 tasks T2.01–T2.04 verified locally on
   the Workers runtime. Not yet deployed to Cloudflare production.
 
 Deployment requires a Cloudflare account with a provisioned D1 database; the
@@ -286,7 +295,6 @@ account owner supplies `database_id` and any secret at deploy time.
 
 ## Not Yet Implemented
 
-- `POST /api/v1/auth/logout` — session revocation (T2.04)
 - Authentication context / `GET /api/v1/auth/me` (T2.05)
 - Authorization middleware, role and permission resolution (T2.06–T2.09)
 - Audit logging of authentication events. `LOGIN` is in the doc 06 §15 action
@@ -304,6 +312,6 @@ account owner supplies `database_id` and any secret at deploy time.
 
 ## Next Recommended Step
 
-T2.04 — Logout API (doc 10 §24 Phase 2): revoke the session identified by the
-presented bearer token, using the `SessionRepository.revoke` contract that
-already exists from T2.02.
+T2.05 — User context (doc 10 §24 Phase 2): resolve the authenticated user from
+the presented bearer token and expose `GET /api/v1/auth/me` without yet
+inventing the role, permission, or scope resolution assigned to T2.06–T2.08.

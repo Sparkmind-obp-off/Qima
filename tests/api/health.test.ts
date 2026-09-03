@@ -140,15 +140,11 @@ describe('unknown API routes', () => {
   });
 
   /**
-   * Phase 2 is partially implemented: T2.03 supplies login, while logout
-   * (T2.04) and the user-context endpoint (T2.05+) do not exist yet. They must
-   * answer 404 rather than a stub, so a client cannot mistake a placeholder for
-   * a working capability (.codex/IMPLEMENTATION_RULES.md §3 Phase Rule).
+   * Updated by T2.04: logout now legitimately exists. User context (T2.05+)
+   * remains absent and must answer 404 rather than a stub, so a client cannot
+   * mistake a placeholder for a working capability.
    */
-  it('confirms the remaining Phase 2 auth endpoints are not implemented yet', async () => {
-    const logout = await app.request('/api/v1/auth/logout', { method: 'POST' }, baseEnv);
-    expect(logout.status).toBe(404);
-
+  it('confirms the next Phase 2 auth endpoint is not implemented yet', async () => {
     const me = await app.request('/api/v1/auth/me', {}, baseEnv);
     expect(me.status).toBe(404);
   });
