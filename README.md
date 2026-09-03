@@ -10,6 +10,13 @@ Implementation follows:
 
 `QIMA — MASTER TRACEABILITY MATRIX + IMPLEMENTATION EXECUTION PLAN v1.0`
 
+## URLs
+
+- **Production**: https://qima.pages.dev
+- **Health**: https://qima.pages.dev/api/v1/health
+- **Database health**: https://qima.pages.dev/api/v1/health/database
+- **GitHub**: https://github.com/Sparkmind-obp-off/Qima
+
 ## Current Phase
 
 - **Phase 0 — Project Bootstrap** — implemented and verified.
@@ -287,11 +294,15 @@ dropped during bundling) passed every source test while failing at runtime.
 - **Runtime verification**: `/`, `/api/v1/health`, `/api/v1/meta`,
   `/api/v1/health/database`, `POST /api/v1/auth/login`,
   `POST /api/v1/auth/logout`, static assets and the 404 boundary
-- **Status**: Phase 0, Phase 1 and Phase 2 tasks T2.01–T2.04 verified locally on
-  the Workers runtime. Not yet deployed to Cloudflare production.
+- **Status**: Active at https://qima.pages.dev. Phase 0, Phase 1 and Phase 2
+  tasks T2.01–T2.04 are verified locally and on Cloudflare production.
+- **Production data**: D1 migrations `0000`–`0004` are applied to
+  `qima-production`; deterministic role/permission seeds are applied.
+- **Last deployed**: 2026-09-03 via the BYOK Cloudflare Pages workflow.
 
-Deployment requires a Cloudflare account with a provisioned D1 database; the
-account owner supplies `database_id` and any secret at deploy time.
+Deployment uses the account-owned `qima` Pages project and `qima-production`
+D1 database. The committed `database_id` remains a safe placeholder; the account
+owner supplies the real binding and any secret only during deployment.
 
 ## Not Yet Implemented
 
