@@ -102,15 +102,15 @@ describe('Phase 1 migrations', () => {
 
       expect(present.has('programs'), 'Phase 4 Program schema must exist').toBe(true);
       expect(present.has('activities'), 'Phase 5 Activity schema must exist').toBe(true);
+      expect(present.has('participants'), 'Phase 6 Participant schema must exist').toBe(true);
 
-      // doc 10 §24: these belong to Phase 6 and later.
+      // doc 10 §24: these belong to Phase 7 and later.
       for (const future of [
-        'participants',
         'registrations',
         'attendance_records',
         'contents',
       ]) {
-        expect(present.has(future), `Later-phase table leaked into Phase 5: ${future}`).toBe(false);
+        expect(present.has(future), `Later-phase table leaked into Phase 6: ${future}`).toBe(false);
       }
     } finally {
       database.close();

@@ -21,8 +21,8 @@
     "verify": "npm run format:check && npm run lint && npm run typecheck && npm run build && npm run test",
     "db:migrate:local": "wrangler d1 migrations apply qima-production --local",
     "db:migrate:prod": "wrangler d1 migrations apply qima-production",
-    "db:seed:local": "wrangler d1 execute qima-production --local --file=./database/seeds/0001_phase1_roles_permissions.sql && wrangler d1 execute qima-production --local --file=./database/seeds/0002_phase4_program_permissions.sql && wrangler d1 execute qima-production --local --file=./database/seeds/0003_phase5_activity_permissions.sql",
-    "db:seed:prod": "wrangler d1 execute qima-production --remote --file=./database/seeds/0001_phase1_roles_permissions.sql && wrangler d1 execute qima-production --remote --file=./database/seeds/0002_phase4_program_permissions.sql && wrangler d1 execute qima-production --remote --file=./database/seeds/0003_phase5_activity_permissions.sql",
+    "db:seed:local": "wrangler d1 execute qima-production --local --file=./database/seeds/0001_phase1_roles_permissions.sql && wrangler d1 execute qima-production --local --file=./database/seeds/0002_phase4_program_permissions.sql && wrangler d1 execute qima-production --local --file=./database/seeds/0003_phase5_activity_permissions.sql && wrangler d1 execute qima-production --local --file=./database/seeds/0004_phase6_participant_permissions.sql",
+    "db:seed:prod": "wrangler d1 execute qima-production --remote --file=./database/seeds/0001_phase1_roles_permissions.sql && wrangler d1 execute qima-production --remote --file=./database/seeds/0002_phase4_program_permissions.sql && wrangler d1 execute qima-production --remote --file=./database/seeds/0003_phase5_activity_permissions.sql && wrangler d1 execute qima-production --remote --file=./database/seeds/0004_phase6_participant_permissions.sql",
     "db:reset:local": "rm -rf .wrangler/state/v3/d1 && npm run db:migrate:local && npm run db:seed:local",
     "db:console:local": "wrangler d1 execute qima-production --local",
     "cf-typegen": "wrangler types"

@@ -35,11 +35,14 @@ Implementation follows:
 - **Phase 5 — Activity** — implemented and verified end-to-end: Unit-owned Activity
   schema/domain/repository, optional same-Unit Program relationship, create/read/list/update/delete
   API, Activity list/detail/form UI, authorization, scope isolation, and IDOR coverage.
+- **Phase 6 — Participant** — implemented and verified end-to-end: Unit-owned Participant
+  schema/domain/repository, create/read/list/update API, bounded search/filter/pagination,
+  Participant list/detail/form UI, authorization, scope isolation, and IDOR coverage.
 
-`QIMA_CURRENT_PHASE` (`apps/api/src/phase.ts`) reports `phase-5-activity` because
-all doc 10 §24 Phase 5 exit criteria passed the repository quality gates.
+`QIMA_CURRENT_PHASE` (`apps/api/src/phase.ts`) reports `phase-6-participant` because
+all doc 10 §24 Phase 6 exit criteria passed the repository quality gates.
 
-Participant and all later business modules remain deliberately unimplemented.
+Registration and all later business modules remain deliberately unimplemented.
 
 ## Principles
 
@@ -200,6 +203,23 @@ CreateActivity / UpdateActivity / ListActivities → `/api/v1/activities` → Ac
 Phase 5 test suites. Activity Unit ownership is server-controlled; optional Program
 associations are accepted only when the Program belongs to the same authorized Unit.
 
+## Phase 6 — Implemented Tasks
+
+| Task | Scope | Status |
+| ---- | ----- | ------ |
+| T6.01 | Participant schema, constraints, indexes, and Unit foreign key | Complete |
+| T6.02 | Participant domain validation, normalization, and status | Complete |
+| T6.03 | Unit-scoped Participant repository | Complete |
+| T6.04 | Create/Read/Update/List Participant use cases | Complete |
+| T6.05 | Authenticated and authorized Participant API | Complete |
+| T6.06 | Participant list, detail, create, and edit UI | Complete |
+| T6.07 | Domain, migration, repository, API, UI, security, and regression tests | Complete |
+
+Traceability: `PART-001` → Participant domain → `participants` → `ParticipantRepository` →
+CreateParticipant / GetParticipant / UpdateParticipant / ListParticipants →
+`/api/v1/participants` → Participant UI → Phase 6 test suites. Participant Unit ownership
+is immutable and resolved from the authorized server context rather than request-body IDs.
+
 ## Functional Entry Points
 
 | Method | Path                      | Response      | Purpose                                        |
@@ -254,6 +274,18 @@ Phase 5 Activity entry points require bearer authentication plus an authorized
 | GET | `/activities/new` | Activity creation UI |
 | GET | `/activities/:activityId` | Activity detail UI |
 | GET | `/activities/:activityId/edit` | Activity edit UI |
+
+Phase 6 Participant entry points require bearer authentication plus an authorized
+`organization_id` / `unit_id` scope pair:
+
+| Method | Path | Scope / purpose |
+| ------ | ---- | --------------- |
+| GET / POST | `/api/v1/participants?organization_id=:organizationId&unit_id=:unitId` | Scoped list/create; optional `status`, `search`, `page`, and `limit` filters |
+| GET / PATCH | `/api/v1/participants/:participantId?organization_id=:organizationId&unit_id=:unitId` | Scoped read/update; no delete in the authoritative Participant contract |
+| GET | `/participants` | Participant list UI |
+| GET | `/participants/new` | Participant creation UI |
+| GET | `/participants/:participantId` | Participant detail UI |
+| GET | `/participants/:participantId/edit` | Participant edit UI |
 
 Request body (doc 06 §23) — JSON only, no query parameters:
 
@@ -326,7 +358,8 @@ Error codes: `VALIDATION_ERROR`, `UNAUTHENTICATED`, `FORBIDDEN`, `NOT_FOUND`,
 - **Schema**: migrations `0000`–`0003` deliver the Phase 1 identity, access
   control, audit and settings schema; migration `0004` adds sessions, `0005`
   adds explicit platform-role assignments, `0006` adds the Unit-owned Program
-  schema, and additive migration `0007` adds Activity plus same-Unit Program integrity.
+  schema, additive migration `0007` adds Activity plus same-Unit Program integrity,
+  and additive migration `0008` adds Unit-owned Participant records and scoped indexes.
 - **Credential boundary**: `users.password_hash` is selected by exactly ONE
   module, `apps/api/src/infrastructure/database/user-credential-repository.ts`.
   The general user read (`createUserRepository`) selects an explicit column list
@@ -385,13 +418,13 @@ The suite follows the doc 09 testing pyramid:
 
 - `tests/unit/` — config/shared primitives, Phase 2 authentication and
   authorization, Phase 3 organization/unit rules, Phase 4 Program invariants, and
-  Phase 5 Activity lifecycle/schedule invariants.
-- `tests/api/` — authentication contracts plus organization/unit/Program/Activity
-  success, validation, permission, Program relationship, cross-scope, query tampering,
+  Phase 5 Activity lifecycle/schedule invariants, and Phase 6 Participant validation.
+- `tests/api/` — authentication contracts plus organization/unit/Program/Activity/Participant
+  success, validation, permission, relationship, cross-scope, query tampering,
   pagination enumeration, and IDOR behavior.
 - `tests/integration/` — surface composition, request boundary, build artifact,
   migrations, repository isolation, credential persistence, organization/unit and
-  Program and Activity persistence, foreign keys, scoped mutation, and Program/Activity UI routes.
+  Program, Activity, and Participant persistence, foreign keys, scoped mutation, and UI routes.
 - `tests/e2e/` — reserved for later browser-level journeys and excluded from
   `npm test` so an empty suite is never misreported as coverage.
 
@@ -434,8 +467,8 @@ production deployment is linked to Git commit `c07103e`.
 - Login rate limiting / lockout. The endpoint bounds password length and
   equalizes response timing, but throttling repeated attempts needs a shared
   counter (D1 or KV) and belongs with the wider authentication hardening task.
-- Participant lifecycle and API (Phase 6)
-- Product UI screens beyond the bootstrap shell, Program, and Activity screens,
+- Registration lifecycle and API (Phase 7)
+- Product UI screens beyond the bootstrap shell, Program, Activity, and Participant screens,
   including login and later resource screens
 - Browser-level end-to-end critical journey tests
 - Reporting, billing and external integrations (later phases)

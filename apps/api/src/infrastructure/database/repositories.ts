@@ -35,6 +35,12 @@ import type {
   OrganizationValues,
   Page,
   PageRequest,
+  Participant,
+  ParticipantListRequest,
+  ParticipantPatch,
+  ParticipantRepository,
+  ParticipantStatus,
+  ParticipantValues,
   Permission,
   PermissionRepository,
   Program,
@@ -110,6 +116,20 @@ interface ActivityRow {
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
+}
+
+interface ParticipantRow {
+  id: string;
+  unit_id: string;
+  name: string;
+  phone: string | null;
+  email: string | null;
+  date_of_birth: string | null;
+  gender: string | null;
+  status: string;
+  metadata: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 interface SiteRow {
@@ -263,6 +283,22 @@ function toActivity(row: ActivityRow): Activity {
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     deletedAt: row.deleted_at,
+  };
+}
+
+function toParticipant(row: ParticipantRow): Participant {
+  return {
+    id: row.id,
+    unitId: row.unit_id,
+    name: row.name,
+    phone: row.phone,
+    email: row.email,
+    dateOfBirth: row.date_of_birth,
+    gender: row.gender,
+    status: row.status as ParticipantStatus,
+    metadata: row.metadata === null ? null : parseJsonObject(row.metadata),
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
   };
 }
 
@@ -756,6 +792,98 @@ export function createActivityRepository(db: QimaDatabase): ActivityRepository {
         [unitId, id],
       );
       return true;
+    },
+  };
+}
+
+export function createParticipantRepository(db: QimaDatabase): ParticipantRepository {
+  return {
+    async create(unitId: string, id: string, values: ParticipantValues) {
+      await execute(
+        db,
+        `insert into participants
+           (id, unit_id, name, phone, email, date_of_birth, gender, status, metadata)
+         values (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          id,
+          unitId,
+          values.name,
+          values.phone,
+          values.email,
+          values.dateOfBirth,
+          values.gender,
+          values.status,
+          values.metadata === null ? null : JSON.stringify(values.metadata),
+        ],
+      );
+      const created = await this.findById(unitId, id);
+      if (created === null) throw new Error('Participant could not be persisted.');
+      return created;
+    },
+
+    async findById(unitId, id) {
+      const row = await queryFirst<ParticipantRow>(
+        db,
+        'select * from participants where unit_id = ? and id = ?',
+        [unitId, id],
+      );
+      return row === null ? null : toParticipant(row);
+    },
+
+    async listByUnit(unitId, request: ParticipantListRequest) {
+      const predicates = ['unit_id = ?'];
+      const parameters: unknown[] = [unitId];
+      if (request.status !== undefined) {
+        predicates.push('status = ?');
+        parameters.push(request.status);
+      }
+      if (request.search !== undefined) {
+        predicates.push(
+          `(lower(name) like ? escape '\\' or lower(coalesce(email, '')) like ? escape '\\' or lower(coalesce(phone, '')) like ? escape '\\')`,
+        );
+        const pattern = `%${request.search
+          .toLowerCase()
+          .replace(/\\/g, '\\\\')
+          .replace(/%/g, '\\%')
+          .replace(/_/g, '\\_')}%`;
+        parameters.push(pattern, pattern, pattern);
+      }
+      const where = predicates.join(' and ');
+      const rows = await queryAll<ParticipantRow>(
+        db,
+        `select * from participants where ${where}
+         order by created_at desc, name limit ? offset ?`,
+        [...parameters, request.perPage, offsetOf(request)],
+      );
+      const total = await queryCount(db, `select count(*) as total from participants where ${where}`, parameters);
+      return toPage(rows.map(toParticipant), request, total);
+    },
+
+    async update(unitId: string, id: string, patch: ParticipantPatch) {
+      const columns: string[] = [];
+      const values: unknown[] = [];
+      for (const [field, column] of [
+        ['name', 'name'],
+        ['phone', 'phone'],
+        ['email', 'email'],
+        ['dateOfBirth', 'date_of_birth'],
+        ['gender', 'gender'],
+        ['status', 'status'],
+        ['metadata', 'metadata'],
+      ] as const) {
+        if (patch[field] !== undefined) {
+          columns.push(`${column} = ?`);
+          values.push(field === 'metadata' && patch[field] !== null ? JSON.stringify(patch[field]) : patch[field]);
+        }
+      }
+      if (columns.length === 0) return this.findById(unitId, id);
+      columns.push("updated_at = strftime('%Y-%m-%dT%H:%M:%SZ', 'now')");
+      await execute(
+        db,
+        `update participants set ${columns.join(', ')} where unit_id = ? and id = ?`,
+        [...values, unitId, id],
+      );
+      return this.findById(unitId, id);
     },
   };
 }

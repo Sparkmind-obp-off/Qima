@@ -67,7 +67,7 @@ describe('GET /api/v1/meta', () => {
   it('reports the phase actually implemented by this artifact', async () => {
     // The marker advances only after the current phase's complete quality gate
     // chain passes. Guarding it here prevents `/meta` from advertising absent scope.
-    expect(QIMA_CURRENT_PHASE).toBe('phase-5-activity');
+    expect(QIMA_CURRENT_PHASE).toBe('phase-6-participant');
   });
 });
 
@@ -125,8 +125,8 @@ describe('unknown API routes', () => {
     expect(body.error?.code).toBe('NOT_FOUND');
   });
 
-  it('confirms post-Phase-5 resource routes are absent', async () => {
-    for (const path of ['/api/v1/participants']) {
+  it('confirms post-Phase-6 resource routes are absent', async () => {
+    for (const path of ['/api/v1/registrations', '/api/v1/attendance']) {
       const response = await app.request(path, {}, baseEnv);
       expect(response.status).toBe(404);
     }

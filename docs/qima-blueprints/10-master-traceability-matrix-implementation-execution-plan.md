@@ -777,10 +777,39 @@ T6.05 Participant API
 T6.06 Participant UI
 T6.07 Participant tests
 
+Verified implementation status (2026-09-04):
+
+✓ T6.01 Participant schema, constraints, indexes, and Unit foreign key
+✓ T6.02 Participant domain validation, normalization, and lifecycle status
+✓ T6.03 Unit-scoped ParticipantRepository create/read/update/list persistence
+✓ T6.04 CreateParticipant, GetParticipant, ListParticipants, and UpdateParticipant use cases
+✓ T6.05 Authenticated Participant API with permission enforcement and bounded filtering/pagination
+✓ T6.06 Participant list, detail, create, and edit UI using the established design system
+✓ T6.07 Domain, migration, repository, API, UI, security, IDOR, and regression tests
+
+Evidence:
+
+- `database/migrations/0008_phase6_participant_schema.sql`
+- `database/seeds/0004_phase6_participant_permissions.sql`
+- `packages/domain/src/participant.ts`
+- `packages/domain/src/repositories.ts`
+- `apps/api/src/infrastructure/database/repositories.ts`
+- `apps/api/src/application/participant/participant-use-cases.ts`
+- `apps/api/src/modules/participant/routes.ts`
+- `apps/web/src/participant-shell.ts`
+- `public/static/participants.js`
+- `tests/unit/phase6-participant-domain.test.ts`
+- `tests/integration/phase6-participant-repository.test.ts`
+- `tests/integration/phase6-participant-ui.test.ts`
+- `tests/api/phase6-participant.test.ts`
+
+Verified quality gates: `npm run verify` — 42 test files / 543 tests passed, including Phase 2–5 regression suites.
+
 Exit Criteria:
 
 ✓ Participant lifecycle works
-✓ Scope enforced
+✓ Organization and Unit scope enforced server-side
+✓ Known-ID IDOR, scope manipulation, query tampering, and pagination enumeration blocked
 PHASE 7 — REGISTRATION
 
 Tasks:

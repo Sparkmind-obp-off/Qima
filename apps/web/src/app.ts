@@ -17,6 +17,7 @@ import { loadQimaConfig } from '@qima/config';
 import type { QimaBindings } from '../../api/src/bindings';
 import { QIMA_CURRENT_PHASE } from '../../api/src/phase';
 import { renderActivityShell } from './activity-shell';
+import { renderParticipantShell } from './participant-shell';
 import { renderProgramShell } from './program-shell';
 import { renderBootstrapShell } from './shell';
 
@@ -38,6 +39,15 @@ web.get('/activities/:activityId/edit', (c) =>
 );
 web.get('/activities/:activityId', (c) =>
   c.html(renderActivityShell({ mode: 'detail', activityId: c.req.param('activityId') })),
+);
+
+web.get('/participants', (c) => c.html(renderParticipantShell({ mode: 'list' })));
+web.get('/participants/new', (c) => c.html(renderParticipantShell({ mode: 'create' })));
+web.get('/participants/:participantId/edit', (c) =>
+  c.html(renderParticipantShell({ mode: 'edit', participantId: c.req.param('participantId') })),
+);
+web.get('/participants/:participantId', (c) =>
+  c.html(renderParticipantShell({ mode: 'detail', participantId: c.req.param('participantId') })),
 );
 
 web.get('/', (c) => {

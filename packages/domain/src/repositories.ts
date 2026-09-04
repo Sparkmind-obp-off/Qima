@@ -29,6 +29,7 @@ import type {
 import type { ScopedRoleAssignment } from './authorization';
 import type { Activity, ActivityPatch, ActivityValues } from './activity';
 import type { OrganizationPatch, OrganizationValues, UnitPatch, UnitValues } from './organization';
+import type { Participant, ParticipantPatch, ParticipantValues } from './participant';
 import type { Program, ProgramPatch, ProgramValues } from './program';
 
 /** doc 06 §34 Pagination. */
@@ -94,6 +95,19 @@ export interface ActivityRepository {
   listByUnit(unitId: string, request: ActivityListRequest): Promise<Page<Activity>>;
   update(unitId: string, id: string, patch: ActivityPatch): Promise<Activity | null>;
   softDelete(unitId: string, id: string): Promise<boolean>;
+}
+
+/** Every Participant operation requires the server-authorized unit scope. */
+export interface ParticipantListRequest extends PageRequest {
+  readonly search?: string;
+  readonly status?: Participant['status'];
+}
+
+export interface ParticipantRepository {
+  create(unitId: string, id: string, values: ParticipantValues): Promise<Participant>;
+  findById(unitId: string, id: string): Promise<Participant | null>;
+  listByUnit(unitId: string, request: ParticipantListRequest): Promise<Page<Participant>>;
+  update(unitId: string, id: string, patch: ParticipantPatch): Promise<Participant | null>;
 }
 
 export interface SiteRepository {

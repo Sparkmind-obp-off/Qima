@@ -52,6 +52,7 @@ describe('worker bundle', () => {
     expect(bundle).toContain('/units');
     expect(bundle).toContain('/programs');
     expect(bundle).toContain('/activities');
+    expect(bundle).toContain('/participants');
     expect(bundle).toContain('API route not found.');
   });
 
@@ -77,6 +78,8 @@ describe('static assets', () => {
     expect(await exists(resolve(distDir, 'static/tokens.css'))).toBe(true);
     expect(await exists(resolve(distDir, 'static/bootstrap.js'))).toBe(true);
     expect(await exists(resolve(distDir, 'static/programs.js'))).toBe(true);
+    expect(await exists(resolve(distDir, 'static/activities.js'))).toBe(true);
+    expect(await exists(resolve(distDir, 'static/participants.js'))).toBe(true);
   });
 
   it('excludes static assets from the worker route so they are served directly', async () => {

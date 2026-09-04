@@ -25,6 +25,7 @@ import { authRoutes } from './modules/auth/routes';
 import { databaseRoutes } from './modules/database/routes';
 import { activityRoutes } from './modules/activity/routes';
 import { organizationRoutes, unitRoutes } from './modules/organization/routes';
+import { participantRoutes } from './modules/participant/routes';
 import { programRoutes } from './modules/program/routes';
 import { QIMA_CURRENT_PHASE } from './phase';
 
@@ -118,6 +119,9 @@ api.route('/programs', programRoutes);
 
 /** Phase 5 — Activity resource routes (doc 06 §27). */
 api.route('/activities', activityRoutes);
+
+/** Phase 6 — Participant resource routes (doc 06 §28). */
+api.route('/participants', participantRoutes);
 
 /** Unknown API routes must not fall through to the web surface. */
 api.all('*', (c) =>
