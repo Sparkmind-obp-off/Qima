@@ -410,18 +410,19 @@ dropped during bundling) passed every source test while failing at runtime.
 - **Runtime verification**: `/`, `/programs`, `/api/v1/health`, `/api/v1/meta`,
   `/api/v1/health/database`, authentication routes, protected organization/unit
   and Program routes, static assets, and the later-phase 404 boundary.
-- **Status**: Active at https://qima.pages.dev. Phase 0–4 are verified locally;
-  production health, database connectivity, Phase 4 metadata/UI, protected Program
-  authentication, and post-Phase-4 route boundaries were verified after deployment.
-- **Production data**: D1 migrations `0000`–`0006` are applied to
-  `qima-production`; deterministic role/permission seeds, including four Program
-  permissions and their scoped role grants, are applied.
+- **Status**: Active at https://qima.pages.dev. Phase 0–5 are verified locally;
+  production health, database connectivity, Phase 5 metadata/UI, the protected
+  Activity authentication boundary, and post-Phase-5 routes were verified after deployment.
+- **Production data**: D1 migrations `0000`–`0007` are applied to
+  `qima-production`; deterministic role/permission seeds, including Program and
+  Activity permissions with their scoped role grants, are applied.
 - **Last deployed**: 2026-09-04 via the BYOK Cloudflare Pages workflow
-  (`https://67de94c2.qima.pages.dev`, promoted at `https://qima.pages.dev`).
+  (`https://caf22bc0.qima.pages.dev`, promoted at `https://qima.pages.dev`).
 
 Deployment uses the account-owned `qima` Pages project and `qima-production`
 D1 database. The committed `database_id` remains a safe placeholder; the account
-owner supplies the real binding and any secret only during deployment.
+owner supplies the real binding and any secret only during deployment. The Phase 5
+production deployment is linked to Git commit `c07103e`.
 
 ## Not Yet Implemented
 
