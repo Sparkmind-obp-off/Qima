@@ -24,6 +24,7 @@ import type { QimaBindings } from './bindings';
 import { authRoutes } from './modules/auth/routes';
 import { databaseRoutes } from './modules/database/routes';
 import { organizationRoutes, unitRoutes } from './modules/organization/routes';
+import { programRoutes } from './modules/program/routes';
 import { QIMA_CURRENT_PHASE } from './phase';
 
 export const api = new Hono<{ Bindings: QimaBindings }>();
@@ -110,6 +111,9 @@ api.route('/auth', authRoutes);
 /** Phase 3 — Organization & Unit resource routes (doc 06 §24-§25). */
 api.route('/organizations', organizationRoutes);
 api.route('/units', unitRoutes);
+
+/** Phase 4 — Program resource routes (doc 06 §26). */
+api.route('/programs', programRoutes);
 
 /** Unknown API routes must not fall through to the web surface. */
 api.all('*', (c) =>

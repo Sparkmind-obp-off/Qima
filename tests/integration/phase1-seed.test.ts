@@ -111,7 +111,7 @@ describe('Phase 1 seed', () => {
     }
   });
 
-  it('does not seed permissions for tables that do not exist yet (phase boundary)', async () => {
+  it('seeds Program permissions without granting later-phase capabilities', async () => {
     const database = await createMigratedDatabase({ seed: true });
 
     try {
@@ -120,9 +120,10 @@ describe('Phase 1 seed', () => {
       }[];
       const resources = new Set(rows.map((row) => row.resource));
 
-      // doc 10 §24: these capabilities arrive in Phase 4+. Granting rights over
-      // them now would authorize access to schema that has not been created.
-      for (const future of ['programs', 'activities', 'participants', 'registrations']) {
+      expect(resources.has('programs')).toBe(true);
+
+      // doc 10 §24: these capabilities arrive after Phase 4.
+      for (const future of ['activities', 'participants', 'registrations']) {
         expect(resources.has(future), `premature permission resource: ${future}`).toBe(false);
       }
     } finally {

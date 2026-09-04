@@ -4,7 +4,11 @@ import { hasRequiredPermission, hasRequiredRole } from '@qima/domain';
 import type { AuthenticatedPrincipal, AuthorizationContext, RoleKey } from '@qima/domain';
 import { getCurrentUser } from '../../application/authentication/get-current-user';
 import { resolveAuthorizationContext } from '../../application/authorization/resolve-authorization-context';
-import { createAccessAssignmentRepository, createUserRepository } from '../../infrastructure/database/repositories';
+import {
+  createAccessAssignmentRepository,
+  createUnitRepository,
+  createUserRepository,
+} from '../../infrastructure/database/repositories';
 import { createSessionRepository } from '../../infrastructure/database/session-repository';
 import { webCryptoSessionTokenService } from '../../infrastructure/security/session-token-service';
 import type { QimaDatabase } from '../../infrastructure/database/d1-client';
@@ -25,6 +29,7 @@ export interface AuthorizationPolicy {
   readonly organizationParam?: string;
   readonly organizationQuery?: string;
   readonly unitParam?: string;
+  readonly unitQuery?: string;
   readonly roles?: readonly RoleKey[];
   readonly permission?: string;
 }
@@ -91,12 +96,17 @@ export function requireAuthorization(
       : policy.organizationQuery
         ? (c.req.query(policy.organizationQuery) ?? null)
         : null;
-    const unitId = policy.unitParam ? (c.req.param(policy.unitParam) ?? null) : null;
+    const unitId = policy.unitParam
+      ? (c.req.param(policy.unitParam) ?? null)
+      : policy.unitQuery
+        ? (c.req.query(policy.unitQuery) ?? null)
+        : null;
 
     if (
       ((policy.organizationParam || policy.organizationQuery) &&
         (organizationId === null || !UUID_PATTERN.test(organizationId))) ||
-      (policy.unitParam && (unitId === null || !UUID_PATTERN.test(unitId)))
+      ((policy.unitParam || policy.unitQuery) &&
+        (unitId === null || !UUID_PATTERN.test(unitId)))
     ) {
       return c.json(
         failure('VALIDATION_ERROR', 'A valid authorization scope is required.'),
@@ -119,6 +129,16 @@ export function requireAuthorization(
     }
 
     try {
+      if (organizationId !== null && unitId !== null) {
+        const unit = await createUnitRepository(db).findById(organizationId, unitId);
+        if (unit === null || unit.status !== 'active') {
+          return c.json(
+            failure('SCOPE_VIOLATION', 'The requested scope is not available.'),
+            ERROR_STATUS.SCOPE_VIOLATION,
+          );
+        }
+      }
+
       const principal = c.get('principal');
       const resolved = await resolveAuthorizationContext(
         principal.user.id,

@@ -91,7 +91,7 @@ describe('Phase 1 migrations', () => {
     }
   });
 
-  it('declare no operational Phase 4+ table (phase boundary)', async () => {
+  it('declares only operational tables implemented through the current phase', async () => {
     const database = await createMigratedDatabase();
 
     try {
@@ -100,17 +100,17 @@ describe('Phase 1 migrations', () => {
         .all() as { name: string }[];
       const present = new Set(rows.map((row) => row.name));
 
-      // doc 10 §24: these belong to Phase 4 and later. Their presence now would
-      // mean Phase 1 quietly implemented future scope.
+      expect(present.has('programs'), 'Phase 4 Program schema must exist').toBe(true);
+
+      // doc 10 §24: these belong to Phase 5 and later.
       for (const future of [
-        'programs',
         'activities',
         'participants',
         'registrations',
         'attendance_records',
         'contents',
       ]) {
-        expect(present.has(future), `Phase 4+ table leaked into Phase 1: ${future}`).toBe(false);
+        expect(present.has(future), `Later-phase table leaked into Phase 4: ${future}`).toBe(false);
       }
     } finally {
       database.close();

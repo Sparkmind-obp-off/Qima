@@ -50,6 +50,7 @@ describe('worker bundle', () => {
     expect(bundle).toContain('qima-api');
     expect(bundle).toContain('/organizations');
     expect(bundle).toContain('/units');
+    expect(bundle).toContain('/programs');
     expect(bundle).toContain('API route not found.');
   });
 
@@ -74,6 +75,7 @@ describe('static assets', () => {
   it('ships the design tokens and bootstrap client script', async () => {
     expect(await exists(resolve(distDir, 'static/tokens.css'))).toBe(true);
     expect(await exists(resolve(distDir, 'static/bootstrap.js'))).toBe(true);
+    expect(await exists(resolve(distDir, 'static/programs.js'))).toBe(true);
   });
 
   it('excludes static assets from the worker route so they are served directly', async () => {

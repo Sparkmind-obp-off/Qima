@@ -16,9 +16,19 @@ import { Hono } from 'hono';
 import { loadQimaConfig } from '@qima/config';
 import type { QimaBindings } from '../../api/src/bindings';
 import { QIMA_CURRENT_PHASE } from '../../api/src/phase';
+import { renderProgramShell } from './program-shell';
 import { renderBootstrapShell } from './shell';
 
 export const web = new Hono<{ Bindings: QimaBindings }>();
+
+web.get('/programs', (c) => c.html(renderProgramShell({ mode: 'list' })));
+web.get('/programs/new', (c) => c.html(renderProgramShell({ mode: 'create' })));
+web.get('/programs/:programId/edit', (c) =>
+  c.html(renderProgramShell({ mode: 'edit', programId: c.req.param('programId') })),
+);
+web.get('/programs/:programId', (c) =>
+  c.html(renderProgramShell({ mode: 'detail', programId: c.req.param('programId') })),
+);
 
 web.get('/', (c) => {
   const config = loadQimaConfig(c.env as unknown as Record<string, string | undefined>);

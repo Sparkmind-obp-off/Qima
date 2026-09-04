@@ -29,14 +29,15 @@ Implementation follows:
   organization and unit create/read/list/update APIs, organization ownership,
   server-owned scope, role/permission enforcement, cross-organization isolation,
   and IDOR regression coverage.
+- **Phase 4 — Program** — implemented and verified end-to-end: scoped Program
+  schema/domain/repository, create/read/list/update/delete API, Program list/detail/form
+  UI, authorization, organization/unit isolation, and IDOR regression coverage.
 
-`QIMA_CURRENT_PHASE` (`apps/api/src/phase.ts`) reports
-`phase-3-organization-unit` because all doc 10 §24 Phase 3 exit criteria have
-passed the repository quality gates. Phase 4 (Program) is the next execution
-target.
+`QIMA_CURRENT_PHASE` (`apps/api/src/phase.ts`) reports `phase-4-program` because
+all doc 10 §24 Phase 4 exit criteria passed the repository quality gates.
+Phase 5 (Activity) is the next execution target.
 
-Product functionality beyond Phase 3 (programs, dashboards, and later business
-modules) remains deliberately unimplemented.
+Activity and all later business modules remain deliberately unimplemented.
 
 ## Principles
 
@@ -161,6 +162,25 @@ Traceability:
 - `ACC-001` → persisted assignments → Phase 2 authorization middleware →
   protected Phase 3 routes → cross-scope/IDOR tests.
 
+## Phase 4 — Implemented Tasks
+
+| Task | Scope | Status |
+| ---- | ----- | ------ |
+| T4.01 | Program schema, constraints, indexes, and Unit foreign key | Complete |
+| T4.02 | Program domain state and validation invariants | Complete |
+| T4.03 | Unit-scoped Program repository | Complete |
+| T4.04 | CreateProgram | Complete |
+| T4.05 | UpdateProgram | Complete |
+| T4.06 | ListPrograms with bounded pagination/filtering | Complete |
+| T4.07 | Authenticated and authorized Program API | Complete |
+| T4.08 | Program list, detail, create, and edit UI | Complete |
+| T4.09 | Domain, migration, repository, API, UI, isolation, and IDOR tests | Complete |
+
+Traceability: `PROG-001` → Program domain → `programs` → `ProgramRepository` →
+CreateProgram / UpdateProgram / ListPrograms → `/api/v1/programs` → Program UI →
+Phase 4 test suites. Program ownership remains immutable and server-enforced through
+the authorized organization/unit context.
+
 ## Functional Entry Points
 
 | Method | Path                      | Response      | Purpose                                        |
@@ -191,6 +211,18 @@ Phase 3 resource entry points (all require bearer authentication):
 | GET / PATCH | `/api/v1/organizations/:organizationId` | Scoped organization read/update |
 | GET / POST | `/api/v1/units?organization_id=:organizationId` | Scoped unit list/create |
 | GET / PATCH | `/api/v1/units/:unitId?organization_id=:organizationId` | Organization + unit scoped read/update |
+
+Phase 4 Program entry points require bearer authentication plus an authorized
+`organization_id` / `unit_id` scope pair:
+
+| Method | Path | Scope / purpose |
+| ------ | ---- | --------------- |
+| GET / POST | `/api/v1/programs?organization_id=:organizationId&unit_id=:unitId` | Scoped list/create |
+| GET / PATCH / DELETE | `/api/v1/programs/:programId?organization_id=:organizationId&unit_id=:unitId` | Scoped read/update/soft-delete |
+| GET | `/programs` | Program list UI |
+| GET | `/programs/new` | Program creation UI |
+| GET | `/programs/:programId` | Program detail UI |
+| GET | `/programs/:programId/edit` | Program edit UI |
 
 Request body (doc 06 §23) — JSON only, no query parameters:
 
@@ -261,8 +293,9 @@ Error codes: `VALIDATION_ERROR`, `UNAUTHENTICATED`, `FORBIDDEN`, `NOT_FOUND`,
 - **Storage**: Cloudflare D1 (binding `DB`, database `qima-production`)
 - **Migrations**: `database/migrations`, applied via wrangler
 - **Schema**: migrations `0000`–`0003` deliver the Phase 1 identity, access
-  control, audit and settings schema; migration `0004` adds sessions and `0005`
-  adds explicit platform-role assignments without duplicating tenant role tables.
+  control, audit and settings schema; migration `0004` adds sessions, `0005`
+  adds explicit platform-role assignments, and `0006` adds the Unit-owned Program
+  schema without introducing any Phase 5 tables.
 - **Credential boundary**: `users.password_hash` is selected by exactly ONE
   module, `apps/api/src/infrastructure/database/user-credential-repository.ts`.
   The general user read (`createUserRepository`) selects an explicit column list
@@ -320,12 +353,12 @@ curl http://localhost:3000/api/v1/health/database
 The suite follows the doc 09 testing pyramid:
 
 - `tests/unit/` — config/shared primitives, Phase 2 authentication and
-  authorization, plus Phase 3 organization/unit domain validation.
-- `tests/api/` — authentication contracts and Phase 3 organization/unit success,
+  authorization, Phase 3 organization/unit rules, and Phase 4 Program invariants.
+- `tests/api/` — authentication contracts plus organization/unit/Program success,
   validation, permission, cross-scope, and IDOR behavior.
 - `tests/integration/` — surface composition, request boundary, build artifact,
-  migrations, repository isolation, credential persistence, organization/unit
-  persistence, foreign keys, and scoped update behavior.
+  migrations, repository isolation, credential persistence, organization/unit and
+  Program persistence, foreign keys, scoped mutation, and Program UI routes.
 - `tests/e2e/` — reserved for later browser-level journeys and excluded from
   `npm test` so an empty suite is never misreported as coverage.
 
@@ -366,12 +399,13 @@ owner supplies the real binding and any secret only during deployment.
 - Login rate limiting / lockout. The endpoint bounds password length and
   equalizes response timing, but throttling repeated attempts needs a shared
   counter (D1 or KV) and belongs with the wider authentication hardening task.
-- Program lifecycle and API (Phase 4)
-- Product UI screens beyond the bootstrap shell, including login and resource screens
+- Activity lifecycle and API (Phase 5)
+- Product UI screens beyond the bootstrap shell and Phase 4 Program screens,
+  including login and later resource screens
 - Browser-level end-to-end critical journey tests
 - Reporting, billing and external integrations (later phases)
 
 ## Next Recommended Step
 
-Phase 4 — Program. Implement the program lifecycle using the Phase 3 unit-owned
-scope boundary without expanding into Activity or later business modules.
+Phase 5 — Activity, using the verified Phase 4 Program boundary without expanding
+into Participant or later business modules.

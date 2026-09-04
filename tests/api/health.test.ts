@@ -65,9 +65,9 @@ describe('GET /api/v1/meta', () => {
   });
 
   it('reports the phase actually implemented by this artifact', async () => {
-    // Phase 3 is Organization & Unit (doc 10 §24). Guarding the value here keeps
-    // `/meta` honest: it may not advertise a phase whose scope is absent.
-    expect(QIMA_CURRENT_PHASE).toBe('phase-3-organization-unit');
+    // The marker advances only after the current phase's complete quality gate
+    // chain passes. Guarding it here prevents `/meta` from advertising absent scope.
+    expect(QIMA_CURRENT_PHASE).toBe('phase-4-program');
   });
 });
 
@@ -116,7 +116,7 @@ describe('GET /api/v1/health/database', () => {
 
 describe('unknown API routes', () => {
   it('returns a NOT_FOUND envelope rather than falling through to HTML', async () => {
-    const response = await app.request('/api/v1/programs', {}, baseEnv);
+    const response = await app.request('/api/v1/not-a-route', {}, baseEnv);
 
     expect(response.status).toBe(404);
     expect(response.headers.get('content-type')).toContain('application/json');
@@ -125,8 +125,8 @@ describe('unknown API routes', () => {
     expect(body.error?.code).toBe('NOT_FOUND');
   });
 
-  it('confirms later-phase resource routes are absent', async () => {
-    for (const path of ['/api/v1/programs', '/api/v1/participants']) {
+  it('confirms post-Phase-4 resource routes are absent', async () => {
+    for (const path of ['/api/v1/activities', '/api/v1/participants']) {
       const response = await app.request(path, {}, baseEnv);
       expect(response.status).toBe(404);
     }

@@ -31,6 +31,12 @@ import type {
   PageRequest,
   Permission,
   PermissionRepository,
+  Program,
+  ProgramListRequest,
+  ProgramPatch,
+  ProgramRepository,
+  ProgramStatus,
+  ProgramValues,
   Role,
   RoleKey,
   RoleRepository,
@@ -67,6 +73,21 @@ interface OrganizationRow {
 interface UnitRow extends OrganizationRow {
   organization_id: string;
   type: string;
+}
+
+interface ProgramRow {
+  id: string;
+  unit_id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  status: string;
+  start_date: string | null;
+  end_date: string | null;
+  capacity: number | null;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
 }
 
 interface SiteRow {
@@ -182,6 +203,23 @@ function toUnit(row: UnitRow): Unit {
     type: row.type as UnitType,
     status: row.status as EntityStatus,
     description: row.description,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    deletedAt: row.deleted_at,
+  };
+}
+
+function toProgram(row: ProgramRow): Program {
+  return {
+    id: row.id,
+    unitId: row.unit_id,
+    name: row.name,
+    slug: row.slug,
+    description: row.description,
+    status: row.status as ProgramStatus,
+    startDate: row.start_date,
+    endDate: row.end_date,
+    capacity: row.capacity,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     deletedAt: row.deleted_at,
@@ -451,6 +489,120 @@ export function createUnitRepository(db: QimaDatabase): UnitRepository {
         [...values, organizationId, id],
       );
       return this.findById(organizationId, id);
+    },
+  };
+}
+
+export function createProgramRepository(db: QimaDatabase): ProgramRepository {
+  return {
+    async create(unitId: string, id: string, values: ProgramValues) {
+      await execute(
+        db,
+        `insert into programs
+           (id, unit_id, name, slug, description, status, start_date, end_date, capacity)
+         values (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          id,
+          unitId,
+          values.name,
+          values.slug,
+          values.description,
+          values.status,
+          values.startDate,
+          values.endDate,
+          values.capacity,
+        ],
+      );
+      const created = await this.findById(unitId, id);
+      if (created === null) throw new Error('Program could not be persisted.');
+      return created;
+    },
+
+    async findById(unitId, id) {
+      const row = await queryFirst<ProgramRow>(
+        db,
+        'select * from programs where unit_id = ? and id = ? and deleted_at is null',
+        [unitId, id],
+      );
+      return row === null ? null : toProgram(row);
+    },
+
+    async findBySlug(unitId, slug) {
+      const row = await queryFirst<ProgramRow>(
+        db,
+        'select * from programs where unit_id = ? and slug = ? and deleted_at is null',
+        [unitId, slug],
+      );
+      return row === null ? null : toProgram(row);
+    },
+
+    async listByUnit(unitId, request: ProgramListRequest) {
+      const predicates = ['unit_id = ?', 'deleted_at is null'];
+      const parameters: unknown[] = [unitId];
+      if (request.status !== undefined) {
+        predicates.push('status = ?');
+        parameters.push(request.status);
+      }
+      if (request.search !== undefined) {
+        predicates.push('(lower(name) like ? escape \'\\\' or lower(slug) like ? escape \'\\\')');
+        const pattern = `%${request.search
+          .toLowerCase()
+          .replace(/\\/g, '\\\\')
+          .replace(/%/g, '\\%')
+          .replace(/_/g, '\\_')}%`;
+        parameters.push(pattern, pattern);
+      }
+      const where = predicates.join(' and ');
+      const rows = await queryAll<ProgramRow>(
+        db,
+        `select * from programs where ${where}
+         order by created_at desc, name limit ? offset ?`,
+        [...parameters, request.perPage, offsetOf(request)],
+      );
+      const total = await queryCount(db, `select count(*) as total from programs where ${where}`, parameters);
+      return toPage(rows.map(toProgram), request, total);
+    },
+
+    async update(unitId: string, id: string, patch: ProgramPatch) {
+      const columns: string[] = [];
+      const values: unknown[] = [];
+      for (const [field, column] of [
+        ['name', 'name'],
+        ['slug', 'slug'],
+        ['description', 'description'],
+        ['status', 'status'],
+        ['startDate', 'start_date'],
+        ['endDate', 'end_date'],
+        ['capacity', 'capacity'],
+      ] as const) {
+        if (patch[field] !== undefined) {
+          columns.push(`${column} = ?`);
+          values.push(patch[field]);
+        }
+      }
+      if (columns.length === 0) return this.findById(unitId, id);
+      columns.push("updated_at = strftime('%Y-%m-%dT%H:%M:%SZ', 'now')");
+      await execute(
+        db,
+        `update programs set ${columns.join(', ')}
+         where unit_id = ? and id = ? and deleted_at is null`,
+        [...values, unitId, id],
+      );
+      return this.findById(unitId, id);
+    },
+
+    async softDelete(unitId, id) {
+      const existing = await this.findById(unitId, id);
+      if (existing === null) return false;
+      await execute(
+        db,
+        `update programs
+            set deleted_at = strftime('%Y-%m-%dT%H:%M:%SZ', 'now'),
+                updated_at = strftime('%Y-%m-%dT%H:%M:%SZ', 'now')
+          where unit_id = ? and id = ? and deleted_at is null`,
+        [unitId, id],
+      );
+      return true;
     },
   };
 }

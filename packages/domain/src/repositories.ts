@@ -28,6 +28,7 @@ import type {
 } from './identity';
 import type { ScopedRoleAssignment } from './authorization';
 import type { OrganizationPatch, OrganizationValues, UnitPatch, UnitValues } from './organization';
+import type { Program, ProgramPatch, ProgramValues } from './program';
 
 /** doc 06 §34 Pagination. */
 export interface PageRequest {
@@ -62,6 +63,21 @@ export interface UnitRepository {
   findBySlug(organizationId: string, slug: string): Promise<Unit | null>;
   listByOrganization(organizationId: string, page: PageRequest): Promise<Page<Unit>>;
   update(organizationId: string, id: string, patch: UnitPatch): Promise<Unit | null>;
+}
+
+/** Every Program operation requires the server-authorized unit scope. */
+export interface ProgramListRequest extends PageRequest {
+  readonly search?: string;
+  readonly status?: Program['status'];
+}
+
+export interface ProgramRepository {
+  create(unitId: string, id: string, values: ProgramValues): Promise<Program>;
+  findById(unitId: string, id: string): Promise<Program | null>;
+  findBySlug(unitId: string, slug: string): Promise<Program | null>;
+  listByUnit(unitId: string, request: ProgramListRequest): Promise<Page<Program>>;
+  update(unitId: string, id: string, patch: ProgramPatch): Promise<Program | null>;
+  softDelete(unitId: string, id: string): Promise<boolean>;
 }
 
 export interface SiteRepository {

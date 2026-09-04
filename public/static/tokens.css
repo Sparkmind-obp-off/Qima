@@ -159,9 +159,149 @@ code {
   margin: 0;
 }
 
+.program-page {
+  padding-top: var(--space-4);
+}
+
+.app-header,
+.program-layout {
+  max-width: var(--max-width-content);
+  margin: 0 auto;
+}
+
+.app-header,
+.section-header,
+.form-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.brand-link {
+  color: var(--color-primary);
+  font-size: var(--font-size-h2);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.program-layout {
+  display: grid;
+  gap: var(--space-4);
+  margin-top: var(--space-6);
+}
+
+.panel {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-6);
+}
+
+.form-grid,
+fieldset {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.form-grid {
+  margin-top: var(--space-4);
+}
+
+fieldset {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+}
+
+label {
+  display: grid;
+  gap: var(--space-1);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-caption);
+  font-weight: 600;
+}
+
+input,
+textarea,
+select,
+button,
+.button-link {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font: inherit;
+  padding: var(--space-2) var(--space-3);
+}
+
+input:focus,
+textarea:focus,
+select:focus,
+button:focus,
+a:focus {
+  outline: 3px solid color-mix(in srgb, var(--color-info) 35%, transparent);
+  outline-offset: 2px;
+}
+
+button,
+.button-link {
+  background: var(--color-primary);
+  color: var(--color-surface);
+  cursor: pointer;
+  text-decoration: none;
+}
+
+button.danger {
+  background: var(--color-danger);
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  margin-top: var(--space-4);
+  border-collapse: collapse;
+}
+
+th,
+td {
+  border-bottom: 1px solid var(--color-border);
+  padding: var(--space-3);
+  text-align: left;
+}
+
+.status-badge {
+  display: inline-block;
+  border-radius: 999px;
+  background: var(--color-surface-muted);
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--font-size-caption);
+  text-transform: capitalize;
+}
+
+.empty-state {
+  padding: var(--space-8) 0;
+  text-align: center;
+}
+
 @media (max-width: 40rem) {
   dl {
     grid-template-columns: 1fr;
     gap: var(--space-1);
+  }
+
+  .app-header,
+  .section-header,
+  .form-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  th:nth-child(3),
+  td:nth-child(3),
+  th:nth-child(4),
+  td:nth-child(4) {
+    display: none;
   }
 }

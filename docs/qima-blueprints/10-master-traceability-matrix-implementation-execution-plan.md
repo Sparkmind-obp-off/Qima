@@ -688,6 +688,33 @@ T4.07 Program API
 T4.08 Program UI
 T4.09 Program tests
 
+Verified implementation status (2026-09-04):
+
+✓ T4.01 Program schema, constraints, indexes, and Unit foreign key
+✓ T4.02 Program domain state and validation invariants
+✓ T4.03 Unit-scoped ProgramRepository persistence operations
+✓ T4.04 CreateProgram with server-authorized organization/unit scope
+✓ T4.05 UpdateProgram with scoped load and IDOR protection
+✓ T4.06 ListPrograms with server-side Unit scope and bounded pagination
+✓ T4.07 Authenticated Program API with role/permission enforcement
+✓ T4.08 Program list, detail, create, and edit UI states
+✓ T4.09 Domain, migration, repository, API, UI, regression, and isolation tests
+
+Evidence:
+
+- `database/migrations/0006_phase4_program_schema.sql`
+- `packages/domain/src/program.ts`
+- `packages/domain/src/repositories.ts`
+- `apps/api/src/infrastructure/database/repositories.ts`
+- `apps/api/src/application/program/program-use-cases.ts`
+- `apps/api/src/modules/program/routes.ts`
+- `apps/web/src/program-shell.ts`
+- `public/static/programs.js`
+- `tests/unit/phase4-program-domain.test.ts`
+- `tests/integration/phase4-program-repository.test.ts`
+- `tests/integration/phase4-program-ui.test.ts`
+- `tests/api/phase4-program.test.ts`
+
 Exit Criteria:
 
 ✓ Program lifecycle works

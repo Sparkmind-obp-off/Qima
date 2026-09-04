@@ -27,6 +27,7 @@ const PHASE_TITLES: Readonly<Record<string, string>> = {
   'phase-1-database-foundation': 'Phase 1 — Database Foundation',
   'phase-2-authentication-access': 'Phase 2 — Authentication & Access',
   'phase-3-organization-unit': 'Phase 3 — Organization & Unit',
+  'phase-4-program': 'Phase 4 — Program',
 };
 
 function phaseTitle(phase: string): string {
@@ -61,8 +62,8 @@ export function renderBootstrapShell(props: BootstrapShellProps): string {
   <p class="label">QIMA Platform</p>
   <h1>${title}</h1>
   <p class="body-large">
-    Fondasi organisasi dan unit QIMA aktif dengan otorisasi serta isolasi scope
-    yang ditegakkan di server.
+    Lifecycle Program QIMA aktif dalam batas organisasi dan unit yang diotorisasi
+    serta ditegakkan di server.
   </p>
 </header>
 
@@ -97,6 +98,7 @@ export function renderBootstrapShell(props: BootstrapShellProps): string {
       <li>Skema audit log (append-only) &amp; settings</li>
       <li>Autentikasi, sesi, role, permission, dan scope server-owned</li>
       <li>API organisasi dan unit dengan isolasi lintas organisasi/unit</li>
+      <li>Lifecycle Program: schema, domain, repository, API, UI, dan pengujian scope</li>
     </ul>
   </section>
 </main>
