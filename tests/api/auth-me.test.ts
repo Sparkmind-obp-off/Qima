@@ -88,11 +88,12 @@ describe('GET /api/v1/auth/me — authenticated user context', () => {
             email: EMAIL,
             status: 'active',
           },
+          platform_roles: [],
+          organizations: [],
+          units: [],
+          permissions: [],
         },
       });
-      expect(body.data).not.toHaveProperty('organizations');
-      expect(body.data).not.toHaveProperty('units');
-      expect(body.data).not.toHaveProperty('permissions');
     } finally {
       context.close();
     }

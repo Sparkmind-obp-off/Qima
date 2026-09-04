@@ -30,4 +30,4 @@ export type QimaPhaseId = (typeof QIMA_PHASE_IDS)[number];
  *
  * Advanced only when the phase's exit criteria (doc 10 §24) are actually met.
  */
-export const QIMA_CURRENT_PHASE: QimaPhaseId = 'phase-1-database-foundation';
+export const QIMA_CURRENT_PHASE: QimaPhaseId = 'phase-2-authentication-access';

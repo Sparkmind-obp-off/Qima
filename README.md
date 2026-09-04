@@ -21,17 +21,15 @@ Implementation follows:
 
 - **Phase 0 — Project Bootstrap** — implemented and verified.
 - **Phase 1 — Database Foundation** — implemented and verified.
-- **Phase 2 — Authentication & Access** — **in progress**: T2.01 credential
-  policy + password hashing, T2.02 session management, T2.03 Login API,
-  T2.04 Logout API, and T2.05 User Context are implemented and verified.
-  T2.06 onwards are not implemented.
+- **Phase 2 — Authentication & Access** — implemented and verified end-to-end:
+  credential security, sessions, login/logout, user context, deterministic role
+  and permission resolution, server-owned organization/unit scope, reusable
+  authorization middleware, and access-isolation tests.
 
-`QIMA_CURRENT_PHASE` (`apps/api/src/phase.ts`) therefore still reports
-`phase-1-database-foundation`: a phase identifier may only advance when the
-phase's doc 10 §24 exit criteria are fully met, and Phase 2 still owes
-authentication context and authorization middleware
-(.codex/IMPLEMENTATION_RULES.md §3 Phase Rule). Reporting `phase-2` now would
-advertise capability that does not exist.
+`QIMA_CURRENT_PHASE` (`apps/api/src/phase.ts`) reports
+`phase-2-authentication-access` because all doc 10 §24 Phase 2 exit criteria are
+verified. Phase 3 remains the next execution target; no Phase 3 CRUD capability
+is included in this release.
 
 Product functionality beyond the above (organizations, units, programs,
 dashboards) is deliberately not implemented — see
@@ -107,8 +105,12 @@ implementation, QA, and execution contracts.
 | T2.02 | Session schema, token service, session repository | Complete    |
 | T2.03 | Login API (`POST /api/v1/auth/login`)             | Complete    |
 | T2.04 | Logout API (`POST /api/v1/auth/logout`)           | Complete    |
-| T2.05 | User context (`GET /api/v1/auth/me`)               | Complete    |
-| T2.06+ | Role/permission/scope resolution and middleware   | Not started |
+| T2.05 | User context (`GET /api/v1/auth/me`)               | Complete |
+| T2.06 | Deterministic platform/organization/unit role resolution | Complete |
+| T2.07 | Centralized `resource.action` permission resolution | Complete |
+| T2.08 | Server-owned organization and unit scope context   | Complete |
+| T2.09 | Reusable authentication/authorization middleware   | Complete |
+| T2.10 | Authentication, role, permission, scope and IDOR tests | Complete |
 
 T2.03 composes the pieces above rather than adding business rules of its own:
 
@@ -152,7 +154,8 @@ Phase 2 tasks T2.03–T2.05 add authentication entry points:
 | ------ | --------------------- | -------------- | ------------------------------ |
 | POST   | `/api/v1/auth/login`  | 200 / 400 / 401 / 500 JSON | Authenticate and issue a session |
 | POST   | `/api/v1/auth/logout` | 200 / 401 / 500 JSON       | Revoke the presented active session |
-| GET    | `/api/v1/auth/me`     | 200 / 401 / 500 JSON       | Resolve the active session user     |
+| GET    | `/api/v1/auth/me`     | 200 / 401 / 500 JSON       | Resolve user plus assigned access context |
+| GET    | `/api/v1/auth/access/organizations/:organizationId/units/:unitId` | 200 / 401 / 403 / 500 JSON | Phase 2 protected authorization proof |
 
 Request body (doc 06 §23) — JSON only, no query parameters:
 
@@ -203,8 +206,8 @@ before lookup and never reaches D1.
 public user projection (`id`, `name`, `email`, `status`) for an active session whose
 user still exists and remains active, then updates `sessions.last_used_at`. A user
 suspended, deactivated, or soft-deleted after login is rejected. Organization,
-unit, role, and permission context is deliberately not fabricated by T2.05; those
-server-resolved fields remain T2.06–T2.08.
+unit, role, and permission context is resolved from explicit server-owned
+assignments. Client-supplied identifiers never grant access by themselves.
 
 ### Response Envelope
 
@@ -223,8 +226,8 @@ Error codes: `VALIDATION_ERROR`, `UNAUTHENTICATED`, `FORBIDDEN`, `NOT_FOUND`,
 - **Storage**: Cloudflare D1 (binding `DB`, database `qima-production`)
 - **Migrations**: `database/migrations`, applied via wrangler
 - **Schema**: migrations `0000`–`0003` deliver the Phase 1 identity, access
-  control, audit and settings schema; migration `0004` adds the Phase 2
-  `sessions` table (T2.02).
+  control, audit and settings schema; migration `0004` adds sessions and `0005`
+  adds explicit platform-role assignments without duplicating tenant role tables.
 - **Credential boundary**: `users.password_hash` is selected by exactly ONE
   module, `apps/api/src/infrastructure/database/user-credential-repository.ts`.
   The general user read (`createUserRepository`) selects an explicit column list
@@ -283,9 +286,9 @@ The suite follows the doc 09 testing pyramid:
 
 - `tests/unit/` — config resolution, shared envelope, domain scope rules,
   credential policy, password hasher, session domain/token service, and the
-  login/logout/current-user use cases (T2.03–T2.05)
+  login/logout/current-user use cases plus authorization primitives (T2.03–T2.10)
 - `tests/api/` — API contract and secret-leakage assertions, including the
-  login, logout, and current-user contracts (T2.03–T2.05)
+  login, logout, user-context and protected-access contracts (T2.03–T2.10)
 - `tests/integration/` — surface composition, request boundary, build artifact,
   migrations, repository isolation, and the credential repository (T2.03)
 - `tests/e2e/` — Phase 3+, excluded from `npm test` so an empty suite can never
@@ -306,8 +309,8 @@ dropped during bundling) passed every source test while failing at runtime.
 - **Runtime verification**: `/`, `/api/v1/health`, `/api/v1/meta`,
   `/api/v1/health/database`, `POST /api/v1/auth/login`,
   `POST /api/v1/auth/logout`, `GET /api/v1/auth/me`, static assets and the 404 boundary
-- **Status**: Active at https://qima.pages.dev. Phase 0, Phase 1 and Phase 2
-  tasks T2.01–T2.05 are verified locally. Production verification is recorded
+- **Status**: Active at https://qima.pages.dev. Phase 0, Phase 1 and all Phase 2
+  tasks T2.01–T2.10 are verified locally. Production verification is recorded
   after each successful deployment.
 - **Production data**: D1 migrations `0000`–`0004` are applied to
   `qima-production`; deterministic role/permission seeds are applied.
@@ -319,10 +322,6 @@ owner supplies the real binding and any secret only during deployment.
 
 ## Not Yet Implemented
 
-- Role resolution (T2.06), permission resolution (T2.07), scope context (T2.08),
-  and authorization middleware (T2.09)
-- Complete `/api/v1/auth/me` organization/unit/permission context depends on
-  T2.06–T2.08; T2.05 currently returns the authenticated public user only.
 - Audit logging of authentication events. `LOGIN` is in the doc 06 §15 action
   vocabulary and migration 0003 anticipates it, but an honest trail needs the
   tenant scope resolved by T2.05/T2.08 and a transactional boundary the current
@@ -338,5 +337,5 @@ owner supplies the real binding and any secret only during deployment.
 
 ## Next Recommended Step
 
-T2.06 — Role resolution (doc 10 §24 Phase 2): resolve server-owned role
-assignments for the authenticated user without trusting client-provided scope.
+Phase 3 — Organization & Unit. Implement organization/unit CRUD only after
+preserving the Phase 2 middleware and scoped repository boundary established here.

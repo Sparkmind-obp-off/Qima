@@ -65,9 +65,9 @@ describe('GET /api/v1/meta', () => {
   });
 
   it('reports the phase actually implemented by this artifact', async () => {
-    // Phase 1 is the Database Foundation (doc 10 §24). Guarding the value here
+    // Phase 2 is Authentication & Access (doc 10 §24). Guarding the value here
     // keeps `/meta` honest: it may not advertise a phase whose scope is absent.
-    expect(QIMA_CURRENT_PHASE).toBe('phase-1-database-foundation');
+    expect(QIMA_CURRENT_PHASE).toBe('phase-2-authentication-access');
   });
 });
 

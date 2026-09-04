@@ -30,8 +30,10 @@ import type {
   Permission,
   PermissionRepository,
   Role,
+  RoleKey,
   RoleRepository,
   ScopeLevel,
+  ScopedRoleAssignment,
   Site,
   SiteRepository,
   Unit,
@@ -458,12 +460,59 @@ export function createPermissionRepository(db: QimaDatabase): PermissionReposito
 
 export function createAccessAssignmentRepository(db: QimaDatabase): AccessAssignmentRepository {
   return {
+    async listAssignments(userId) {
+      interface AssignmentRow {
+        role_key: RoleKey;
+        scope_level: ScopeLevel;
+        organization_id: string | null;
+        unit_id: string | null;
+      }
+
+      const rows = await queryAll<AssignmentRow>(
+        db,
+        `select r.key as role_key, r.scope_level, null as organization_id, null as unit_id
+           from user_platform_roles upr
+           join roles r on r.id = upr.role_id
+          where upr.user_id = ? and r.scope_level = 'platform'
+          union all
+         select r.key as role_key, r.scope_level, uor.organization_id, null as unit_id
+           from user_organization_roles uor
+           join roles r on r.id = uor.role_id
+           join organizations o on o.id = uor.organization_id
+          where uor.user_id = ? and r.scope_level = 'organization'
+            and o.deleted_at is null and o.status = 'active'
+          union all
+         select r.key as role_key, r.scope_level, u.organization_id, uur.unit_id
+           from user_unit_roles uur
+           join roles r on r.id = uur.role_id
+           join units u on u.id = uur.unit_id
+           join organizations o on o.id = u.organization_id
+          where uur.user_id = ? and r.scope_level = 'unit'
+            and u.deleted_at is null and u.status = 'active'
+            and o.deleted_at is null and o.status = 'active'
+          order by scope_level, organization_id, unit_id, role_key`,
+        [userId, userId, userId],
+      );
+
+      return rows.map(
+        (row): ScopedRoleAssignment => ({
+          roleKey: row.role_key,
+          scopeLevel: row.scope_level,
+          organizationId: row.organization_id,
+          unitId: row.unit_id,
+        }),
+      );
+    },
+
     async listOrganizationRoleKeys(userId, organizationId) {
-      const rows = await queryAll<{ key: string }>(
+      const rows = await queryAll<{ key: RoleKey }>(
         db,
         `select r.key from roles r
            join user_organization_roles uor on uor.role_id = r.id
+           join organizations o on o.id = uor.organization_id
           where uor.user_id = ? and uor.organization_id = ?
+            and r.scope_level = 'organization'
+            and o.deleted_at is null and o.status = 'active'
           order by r.key`,
         [userId, organizationId],
       );
@@ -471,54 +520,67 @@ export function createAccessAssignmentRepository(db: QimaDatabase): AccessAssign
     },
 
     async listUnitRoleKeys(userId, unitId) {
-      const rows = await queryAll<{ key: string }>(
+      const rows = await queryAll<{ key: RoleKey }>(
         db,
         `select r.key from roles r
            join user_unit_roles uur on uur.role_id = r.id
+           join units u on u.id = uur.unit_id
           where uur.user_id = ? and uur.unit_id = ?
+            and r.scope_level = 'unit'
+            and u.deleted_at is null and u.status = 'active'
           order by r.key`,
         [userId, unitId],
       );
       return rows.map((row) => row.key);
     },
 
-    /**
-     * Effective permissions = permissions of the user's organization roles,
-     * plus permissions of the user's roles on the requested unit.
-     *
-     * A unit contributes permissions ONLY when an explicit `user_unit_roles`
-     * row exists AND the unit belongs to the organization being acted in — a
-     * caller cannot widen its permission set by passing an arbitrary unit id
-     * (.codex/IMPLEMENTATION_RULES.md §10).
-     */
     async resolvePermissionKeys(userId, organizationId, unitId) {
-      const organizationRows = await queryAll<{ key: string }>(
+      const platformRows = await queryAll<{ key: string }>(
         db,
         `select distinct p.key from permissions p
            join role_permissions rp on rp.permission_id = p.id
-           join user_organization_roles uor on uor.role_id = rp.role_id
-          where uor.user_id = ? and uor.organization_id = ?`,
-        [userId, organizationId],
+           join user_platform_roles upr on upr.role_id = rp.role_id
+           join roles r on r.id = upr.role_id
+          where upr.user_id = ? and r.scope_level = 'platform'`,
+        [userId],
       );
 
+      const organizationRows =
+        organizationId === null
+          ? []
+          : await queryAll<{ key: string }>(
+              db,
+              `select distinct p.key from permissions p
+                 join role_permissions rp on rp.permission_id = p.id
+                 join user_organization_roles uor on uor.role_id = rp.role_id
+                 join roles r on r.id = uor.role_id
+                 join organizations o on o.id = uor.organization_id
+                where uor.user_id = ? and uor.organization_id = ?
+                  and r.scope_level = 'organization'
+                  and o.deleted_at is null and o.status = 'active'`,
+              [userId, organizationId],
+            );
+
       const unitRows =
-        unitId === null
+        organizationId === null || unitId === null
           ? []
           : await queryAll<{ key: string }>(
               db,
               `select distinct p.key from permissions p
                  join role_permissions rp on rp.permission_id = p.id
                  join user_unit_roles uur on uur.role_id = rp.role_id
+                 join roles r on r.id = uur.role_id
                  join units u on u.id = uur.unit_id
-                where uur.user_id = ?
-                  and uur.unit_id = ?
-                  and u.organization_id = ?
-                  and u.deleted_at is null`,
+                 join organizations o on o.id = u.organization_id
+                where uur.user_id = ? and uur.unit_id = ? and u.organization_id = ?
+                  and r.scope_level = 'unit'
+                  and u.deleted_at is null and u.status = 'active'
+                  and o.deleted_at is null and o.status = 'active'`,
               [userId, unitId, organizationId],
             );
 
       const keys = new Set<string>();
-      for (const row of [...organizationRows, ...unitRows]) {
+      for (const row of [...platformRows, ...organizationRows, ...unitRows]) {
         keys.add(row.key);
       }
       return [...keys].sort();

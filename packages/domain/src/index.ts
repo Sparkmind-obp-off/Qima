@@ -27,8 +27,9 @@ export * from './identity';
 export * from './repositories';
 export * from './schema';
 
-// Phase 2 — Authentication & Access (doc 10 §24), tasks T2.01 and T2.02.
+// Phase 2 — Authentication & Access (doc 10 §24).
 export * from './authentication';
+export * from './authorization';
 export * from './session';
 
 /** Server-resolved authorization scope carried by every authenticated request. */

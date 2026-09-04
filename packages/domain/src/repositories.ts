@@ -21,10 +21,12 @@ import type {
   Organization,
   Permission,
   Role,
+  RoleKey,
   Site,
   Unit,
   User,
 } from './identity';
+import type { ScopedRoleAssignment } from './authorization';
 
 /** doc 06 §34 Pagination. */
 export interface PageRequest {
@@ -93,10 +95,16 @@ export interface PermissionRepository {
  * returns "all units" for a user without an explicit assignment row.
  */
 export interface AccessAssignmentRepository {
-  listOrganizationRoleKeys(userId: string, organizationId: string): Promise<readonly string[]>;
-  listUnitRoleKeys(userId: string, unitId: string): Promise<readonly string[]>;
-  /** Effective permission keys resolved from the user's assigned roles. */
-  resolvePermissionKeys(userId: string, organizationId: string, unitId: string | null): Promise<readonly string[]>;
+  /** Every explicit platform, organization and unit assignment for a user. */
+  listAssignments(userId: string): Promise<readonly ScopedRoleAssignment[]>;
+  listOrganizationRoleKeys(userId: string, organizationId: string): Promise<readonly RoleKey[]>;
+  listUnitRoleKeys(userId: string, unitId: string): Promise<readonly RoleKey[]>;
+  /** Effective permission keys resolved only from roles valid in the requested scope. */
+  resolvePermissionKeys(
+    userId: string,
+    organizationId: string | null,
+    unitId: string | null,
+  ): Promise<readonly string[]>;
 }
 
 /**

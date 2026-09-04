@@ -611,6 +611,28 @@ T2.08 Scope context
 T2.09 Authorization middleware
 T2.10 Access tests
 
+Verified implementation status (2026-09-04):
+
+✓ T2.01 Authentication
+✓ T2.02 Session management
+✓ T2.03 Login API
+✓ T2.04 Logout
+✓ T2.05 User context
+✓ T2.06 Role resolution
+✓ T2.07 Permission resolution
+✓ T2.08 Scope context
+✓ T2.09 Authorization middleware
+✓ T2.10 Access tests
+
+Evidence:
+
+- `packages/domain/src/authorization.ts`
+- `apps/api/src/application/authorization/resolve-authorization-context.ts`
+- `apps/api/src/modules/auth/authorization-middleware.ts`
+- `GET /api/v1/auth/access/organizations/:organizationId/units/:unitId`
+- `tests/unit/phase2-authorization-domain.test.ts`
+- `tests/api/auth-access.test.ts`
+
 Exit Criteria:
 
 ✓ Login works

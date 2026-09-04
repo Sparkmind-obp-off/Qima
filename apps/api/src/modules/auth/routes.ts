@@ -26,20 +26,30 @@ import { Hono } from 'hono';
 import { ERROR_STATUS, failure, success } from '@qima/shared';
 import { getCurrentUser } from '../../application/authentication/get-current-user';
 import { loginUser } from '../../application/authentication/login-user';
+import { resolveAccessSummary } from '../../application/authorization/resolve-authorization-context';
 import type { LoginFailureReason } from '../../application/authentication/login-user';
 import { logoutUser } from '../../application/authentication/logout-user';
 import { createSessionRepository } from '../../infrastructure/database/session-repository';
 import { createUserCredentialRepository } from '../../infrastructure/database/user-credential-repository';
-import { createUserRepository } from '../../infrastructure/database/repositories';
-import { webCryptoPasswordHasher } from '../../infrastructure/security/password-hasher';
 import {
-  isWellFormedSessionToken,
-  webCryptoSessionTokenService,
-} from '../../infrastructure/security/session-token-service';
+  createAccessAssignmentRepository,
+  createUserRepository,
+} from '../../infrastructure/database/repositories';
+import { webCryptoPasswordHasher } from '../../infrastructure/security/password-hasher';
+import { webCryptoSessionTokenService } from '../../infrastructure/security/session-token-service';
 import type { QimaDatabase } from '../../infrastructure/database/d1-client';
 import type { QimaBindings } from '../../bindings';
+import { readBearerToken } from './bearer-token';
+import {
+  requireAuthentication,
+  requireAuthorization,
+  type AuthorizationVariables,
+} from './authorization-middleware';
 
-export const authRoutes = new Hono<{ Bindings: QimaBindings }>();
+export const authRoutes = new Hono<{
+  Bindings: QimaBindings;
+  Variables: AuthorizationVariables;
+}>();
 
 /** Resolve the binding as the structural database contract used internally. */
 function resolveDatabase(env: QimaBindings | undefined): QimaDatabase | null {
@@ -114,23 +124,6 @@ function failureResponse(reason: LoginFailureReason): {
   }
 
   return { code: 'UNAUTHENTICATED', message: 'Invalid email or password.' };
-}
-
-/**
- * Read one RFC 6750-style bearer credential without accepting ambiguous input.
- *
- * Shape validation is intentionally transport-level; authenticity remains an
- * application/domain decision.
- */
-function readBearerToken(authorization: string | undefined): string | null {
-  if (authorization === undefined) {
-    return null;
-  }
-
-  const match = /^Bearer ([^\s,]+)$/i.exec(authorization);
-  const token = match?.[1];
-
-  return token !== undefined && isWellFormedSessionToken(token) ? token : null;
 }
 
 /**
@@ -258,7 +251,11 @@ authRoutes.get('/me', async (c) => {
       );
     }
 
-    return c.json(success({ user: publicUser(result.user) }));
+    const access = await resolveAccessSummary(result.user.id, {
+      accessAssignments: createAccessAssignmentRepository(db),
+    });
+
+    return c.json(success({ user: publicUser(result.user), ...access }));
   } catch {
     return c.json(
       failure('INTERNAL_ERROR', 'User context could not be resolved.'),
@@ -274,6 +271,36 @@ authRoutes.get('/me', async (c) => {
  * unknown, expired or already-revoked credential, and 500 only for an actual
  * infrastructure failure. Invalid-session responses are deliberately identical.
  */
+authRoutes.use('/access/*', requireAuthentication);
+
+/**
+ * Minimal Phase 2 proof surface. It exposes no product entity and exists only to
+ * prove role, permission, organization and unit authorization before Phase 3.
+ */
+authRoutes.get(
+  '/access/organizations/:organizationId/units/:unitId',
+  requireAuthorization({
+    organizationParam: 'organizationId',
+    unitParam: 'unitId',
+    roles: ['SUPER_ADMIN', 'ORG_ADMIN', 'UNIT_ADMIN'],
+    permission: 'units.update',
+  }),
+  (c) => {
+    const context = c.get('authorization');
+    return c.json(
+      success({
+        authorized: true,
+        scope: {
+          organization_id: context.organizationId,
+          unit_id: context.unitId,
+        },
+        roles: context.roles,
+        permissions: context.permissions,
+      }),
+    );
+  },
+);
+
 authRoutes.post('/logout', async (c) => {
   const token = readBearerToken(c.req.header('authorization'));
 
