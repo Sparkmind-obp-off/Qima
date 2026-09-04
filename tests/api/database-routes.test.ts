@@ -146,23 +146,18 @@ describe('GET /api/v1/database/access-catalog', () => {
   });
 });
 
-describe('Phase 2+ resource routes remain unimplemented', () => {
-  it('does not expose tenant resource endpoints yet', async () => {
+describe('tenant resource boundaries', () => {
+  it('protects Phase 3 resources and leaves future resources absent', async () => {
     const { env, close } = await envWithDatabase({ seed: true });
 
     try {
-      // Phase 1 is the database foundation only: authenticated tenant reads
-      // require the Phase 2 authorization stack (doc 10 §24). A route that
-      // answered here would be an unauthenticated tenant read path.
-      for (const path of [
-        '/api/v1/auth/login',
-        '/api/v1/organizations',
-        '/api/v1/units',
-        '/api/v1/users',
-        '/api/v1/audit-logs',
-      ]) {
+      for (const path of ['/api/v1/organizations', '/api/v1/units']) {
         const response = await app.request(path, {}, env);
-        expect(response.status, `${path} must not be implemented yet`).toBe(404);
+        expect(response.status, `${path} must require authentication`).toBe(401);
+      }
+      for (const path of ['/api/v1/users', '/api/v1/audit-logs']) {
+        const response = await app.request(path, {}, env);
+        expect(response.status, `${path} must remain unimplemented`).toBe(404);
       }
     } finally {
       close();

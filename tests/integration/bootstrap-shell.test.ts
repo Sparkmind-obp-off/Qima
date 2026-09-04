@@ -71,12 +71,12 @@ describe('phase reporting consistency', () => {
     expect(html).toContain(`id="phase-value">${meta.data.phase}<`);
   });
 
-  it('labels the completed authentication-access artifact as Phase 2', async () => {
+  it('labels the completed organization-unit artifact as Phase 3', async () => {
     const response = await app.request('/', {}, { APP_ENV: 'test' });
     const html = await response.text();
 
-    expect(html).toContain('Phase 2 — Authentication &amp; Access');
-    expect(html).not.toContain('Phase 1 — Database Foundation');
+    expect(html).toContain('Phase 3 — Organization &amp; Unit');
+    expect(html).not.toContain('Phase 2 — Authentication &amp; Access');
   });
 });
 

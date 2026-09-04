@@ -61,8 +61,8 @@ export function renderBootstrapShell(props: BootstrapShellProps): string {
   <p class="label">QIMA Platform</p>
   <h1>${title}</h1>
   <p class="body-large">
-    Fondasi engineering dan skema data QIMA aktif. Modul produk belum
-    diimplementasikan pada fase ini.
+    Fondasi organisasi dan unit QIMA aktif dengan otorisasi serta isolasi scope
+    yang ditegakkan di server.
   </p>
 </header>
 
@@ -95,6 +95,8 @@ export function renderBootstrapShell(props: BootstrapShellProps): string {
       <li>Skema database: organisasi, unit, site, domain mapping</li>
       <li>Skema akses: user, role, permission, scope assignment</li>
       <li>Skema audit log (append-only) &amp; settings</li>
+      <li>Autentikasi, sesi, role, permission, dan scope server-owned</li>
+      <li>API organisasi dan unit dengan isolasi lintas organisasi/unit</li>
     </ul>
   </section>
 </main>

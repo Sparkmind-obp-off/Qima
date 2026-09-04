@@ -48,6 +48,8 @@ describe('worker bundle', () => {
     // Proof that the app code is bundled, not just the plugin scaffold.
     expect(bundle).toContain('/api/v1');
     expect(bundle).toContain('qima-api');
+    expect(bundle).toContain('/organizations');
+    expect(bundle).toContain('/units');
     expect(bundle).toContain('API route not found.');
   });
 

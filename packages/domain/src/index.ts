@@ -24,6 +24,7 @@
 
 // Phase 1 — Database Foundation (doc 10 §24).
 export * from './identity';
+export * from './organization';
 export * from './repositories';
 export * from './schema';
 

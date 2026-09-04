@@ -23,6 +23,7 @@ import { ERROR_STATUS, failure, success } from '@qima/shared';
 import type { QimaBindings } from './bindings';
 import { authRoutes } from './modules/auth/routes';
 import { databaseRoutes } from './modules/database/routes';
+import { organizationRoutes, unitRoutes } from './modules/organization/routes';
 import { QIMA_CURRENT_PHASE } from './phase';
 
 export const api = new Hono<{ Bindings: QimaBindings }>();
@@ -105,6 +106,10 @@ api.route('/database', databaseRoutes);
  * wildcard below would otherwise answer every `/auth/*` call with 404.
  */
 api.route('/auth', authRoutes);
+
+/** Phase 3 — Organization & Unit resource routes (doc 06 §24-§25). */
+api.route('/organizations', organizationRoutes);
+api.route('/units', unitRoutes);
 
 /** Unknown API routes must not fall through to the web surface. */
 api.all('*', (c) =>

@@ -43,6 +43,8 @@ INSERT OR IGNORE INTO roles (id, key, name, description, scope_level, is_system)
 -- would grant rights over tables that do not exist yet.
 -- ---------------------------------------------------------------------------
 INSERT OR IGNORE INTO permissions (id, key, resource, action, description) VALUES
+  ('22222222-0000-4000-8000-000000000014', 'organizations.create', 'organizations', 'create',
+   'Create an organization at platform scope.'),
   ('22222222-0000-4000-8000-000000000001', 'organizations.read', 'organizations', 'read',
    'View organization data.'),
   ('22222222-0000-4000-8000-000000000002', 'organizations.update', 'organizations', 'update',
@@ -94,11 +96,12 @@ SELECT 'rp-super-' || p.id, r.id, p.id
   FROM roles r CROSS JOIN permissions p
  WHERE r.key = 'SUPER_ADMIN';
 
--- ORG_ADMIN — all permissions currently defined for tenant administration.
+-- ORG_ADMIN — tenant administration permissions; organization creation remains platform-only.
 INSERT OR IGNORE INTO role_permissions (id, role_id, permission_id)
 SELECT 'rp-orgadmin-' || p.id, r.id, p.id
   FROM roles r CROSS JOIN permissions p
- WHERE r.key = 'ORG_ADMIN';
+ WHERE r.key = 'ORG_ADMIN'
+   AND p.key <> 'organizations.create';
 
 -- UNIT_ADMIN — unit-facing administration; no organization mutation.
 INSERT OR IGNORE INTO role_permissions (id, role_id, permission_id)

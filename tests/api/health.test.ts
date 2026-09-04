@@ -65,9 +65,9 @@ describe('GET /api/v1/meta', () => {
   });
 
   it('reports the phase actually implemented by this artifact', async () => {
-    // Phase 2 is Authentication & Access (doc 10 §24). Guarding the value here
-    // keeps `/meta` honest: it may not advertise a phase whose scope is absent.
-    expect(QIMA_CURRENT_PHASE).toBe('phase-2-authentication-access');
+    // Phase 3 is Organization & Unit (doc 10 §24). Guarding the value here keeps
+    // `/meta` honest: it may not advertise a phase whose scope is absent.
+    expect(QIMA_CURRENT_PHASE).toBe('phase-3-organization-unit');
   });
 });
 
@@ -125,15 +125,8 @@ describe('unknown API routes', () => {
     expect(body.error?.code).toBe('NOT_FOUND');
   });
 
-  /**
-   * Updated by T2.03 (.codex/IMPLEMENTATION_RULES.md §16): `/api/v1/auth/login`
-   * was previously asserted to be absent, which was correct while Phase 2 had
-   * no transport surface. The login endpoint now legitimately exists, so the
-   * assertion moves to the routes that are still genuinely unimplemented —
-   * organizations and units are Phase 3 (doc 10 §24).
-   */
-  it('confirms not-yet-implemented resource routes are absent', async () => {
-    for (const path of ['/api/v1/organizations', '/api/v1/units']) {
+  it('confirms later-phase resource routes are absent', async () => {
+    for (const path of ['/api/v1/programs', '/api/v1/participants']) {
       const response = await app.request(path, {}, baseEnv);
       expect(response.status).toBe(404);
     }

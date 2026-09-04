@@ -649,6 +649,26 @@ T3.04 Unit scope
 T3.05 Unit authorization
 T3.06 Unit isolation tests
 
+Verified implementation status (2026-09-04):
+
+✓ T3.01 Organization create/read/list/update API and use cases
+✓ T3.02 Unit create/read/list/update API and use cases
+✓ T3.03 Organization → Unit foreign key and immutable ownership boundary
+✓ T3.04 Server-owned organization/unit scope on protected queries
+✓ T3.05 Existing Phase 2 role/permission authorization reused server-side
+✓ T3.06 Cross-organization, cross-unit, IDOR, and regression tests
+
+Evidence:
+
+- `packages/domain/src/organization.ts`
+- `apps/api/src/application/organization/organization-use-cases.ts`
+- `apps/api/src/application/organization/unit-use-cases.ts`
+- `apps/api/src/modules/organization/routes.ts`
+- `apps/api/src/infrastructure/database/repositories.ts`
+- `tests/unit/phase3-organization-unit-domain.test.ts`
+- `tests/integration/phase3-organization-unit-repository.test.ts`
+- `tests/api/phase3-organization-unit.test.ts`
+
 Exit Criteria:
 
 ✓ Organization works

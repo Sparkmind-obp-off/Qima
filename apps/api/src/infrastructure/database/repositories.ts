@@ -24,7 +24,9 @@ import type {
   DomainMappingRepository,
   EntityStatus,
   Organization,
+  OrganizationPatch,
   OrganizationRepository,
+  OrganizationValues,
   Page,
   PageRequest,
   Permission,
@@ -37,8 +39,10 @@ import type {
   Site,
   SiteRepository,
   Unit,
+  UnitPatch,
   UnitRepository,
   UnitType,
+  UnitValues,
   User,
   UserRepository,
   UserStatus,
@@ -279,6 +283,18 @@ function toPage<T>(items: readonly T[], page: PageRequest, total: number): Page<
 
 export function createOrganizationRepository(db: QimaDatabase): OrganizationRepository {
   return {
+    async create(id: string, values: OrganizationValues) {
+      await execute(
+        db,
+        `insert into organizations (id, name, slug, status, description)
+         values (?, ?, ?, ?, ?)`,
+        [id, values.name, values.slug, values.status, values.description],
+      );
+      const created = await this.findById(id);
+      if (created === null) throw new Error('Organization could not be persisted.');
+      return created;
+    },
+
     async findById(id) {
       const row = await queryFirst<OrganizationRow>(
         db,
@@ -309,11 +325,74 @@ export function createOrganizationRepository(db: QimaDatabase): OrganizationRepo
       );
       return toPage(rows.map(toOrganization), page, total);
     },
+
+    async listByIds(ids, page) {
+      const uniqueIds = [...new Set(ids)];
+      if (uniqueIds.length === 0) return toPage([], page, 0);
+      const placeholders = uniqueIds.map(() => '?').join(', ');
+      const rows = await queryAll<OrganizationRow>(
+        db,
+        `select * from organizations where id in (${placeholders}) and deleted_at is null
+         order by name limit ? offset ?`,
+        [...uniqueIds, page.perPage, offsetOf(page)],
+      );
+      const total = await queryCount(
+        db,
+        `select count(*) as total from organizations
+         where id in (${placeholders}) and deleted_at is null`,
+        uniqueIds,
+      );
+      return toPage(rows.map(toOrganization), page, total);
+    },
+
+    async update(id: string, patch: OrganizationPatch) {
+      const columns: string[] = [];
+      const values: unknown[] = [];
+      for (const [field, column] of [
+        ['name', 'name'],
+        ['slug', 'slug'],
+        ['status', 'status'],
+        ['description', 'description'],
+      ] as const) {
+        if (patch[field] !== undefined) {
+          columns.push(`${column} = ?`);
+          values.push(patch[field]);
+        }
+      }
+      if (columns.length === 0) return this.findById(id);
+      columns.push("updated_at = strftime('%Y-%m-%dT%H:%M:%SZ', 'now')");
+      await execute(
+        db,
+        `update organizations set ${columns.join(', ')} where id = ? and deleted_at is null`,
+        [...values, id],
+      );
+      return this.findById(id);
+    },
   };
 }
 
 export function createUnitRepository(db: QimaDatabase): UnitRepository {
   return {
+    async create(organizationId: string, id: string, values: UnitValues) {
+      await execute(
+        db,
+        `insert into units (id, organization_id, name, slug, type, status, description)
+         values (?, ?, ?, ?, ?, ?, ?)`,
+        [
+          id,
+          organizationId,
+          values.name,
+          values.slug,
+          values.type,
+          values.status,
+          values.description,
+        ],
+      );
+      const created = await this.findById(organizationId, id);
+      if (created === null) throw new Error('Unit could not be persisted.');
+      return created;
+    },
+
     // Scope predicate is present even on the by-id lookup: knowing a unit id is
     // never sufficient to read it (doc 06 §8).
     async findById(organizationId, id) {
@@ -346,6 +425,32 @@ export function createUnitRepository(db: QimaDatabase): UnitRepository {
         [organizationId],
       );
       return toPage(rows.map(toUnit), page, total);
+    },
+
+    async update(organizationId: string, id: string, patch: UnitPatch) {
+      const columns: string[] = [];
+      const values: unknown[] = [];
+      for (const [field, column] of [
+        ['name', 'name'],
+        ['slug', 'slug'],
+        ['status', 'status'],
+        ['description', 'description'],
+        ['type', 'type'],
+      ] as const) {
+        if (patch[field] !== undefined) {
+          columns.push(`${column} = ?`);
+          values.push(patch[field]);
+        }
+      }
+      if (columns.length === 0) return this.findById(organizationId, id);
+      columns.push("updated_at = strftime('%Y-%m-%dT%H:%M:%SZ', 'now')");
+      await execute(
+        db,
+        `update units set ${columns.join(', ')}
+         where organization_id = ? and id = ? and deleted_at is null`,
+        [...values, organizationId, id],
+      );
+      return this.findById(organizationId, id);
     },
   };
 }

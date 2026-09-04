@@ -25,16 +25,18 @@ Implementation follows:
   credential security, sessions, login/logout, user context, deterministic role
   and permission resolution, server-owned organization/unit scope, reusable
   authorization middleware, and access-isolation tests.
+- **Phase 3 — Organization & Unit** — implemented and verified end-to-end:
+  organization and unit create/read/list/update APIs, organization ownership,
+  server-owned scope, role/permission enforcement, cross-organization isolation,
+  and IDOR regression coverage.
 
 `QIMA_CURRENT_PHASE` (`apps/api/src/phase.ts`) reports
-`phase-2-authentication-access` because all doc 10 §24 Phase 2 exit criteria are
-verified. Phase 3 remains the next execution target; no Phase 3 CRUD capability
-is included in this release.
+`phase-3-organization-unit` because all doc 10 §24 Phase 3 exit criteria have
+passed the repository quality gates. Phase 4 (Program) is the next execution
+target.
 
-Product functionality beyond the above (organizations, units, programs,
-dashboards) is deliberately not implemented — see
-[`.codex/PHASE_0_EXECUTION_SCOPE.md`](.codex/PHASE_0_EXECUTION_SCOPE.md) §4
-Explicit Non-Goals.
+Product functionality beyond Phase 3 (programs, dashboards, and later business
+modules) remains deliberately unimplemented.
 
 ## Principles
 
@@ -135,6 +137,30 @@ Layer ownership (doc 08 §10/§12):
 - `apps/api/src/application/authentication/get-current-user.ts` — resolves an active
   bearer session to its still-active user and records successful session activity.
 
+## Phase 3 — Implemented Tasks
+
+| Task  | Scope | Status |
+| ----- | ----- | ------ |
+| T3.01 | Organization create/read/list/update | Complete |
+| T3.02 | Unit create/read/list/update | Complete |
+| T3.03 | Organization → Unit ownership and foreign-key relationship | Complete |
+| T3.04 | Server-owned organization and unit scope | Complete |
+| T3.05 | Role and `resource.action` unit authorization | Complete |
+| T3.06 | Cross-organization, cross-unit, IDOR, and regression tests | Complete |
+
+The authoritative API contract (doc 06 §24–§25) defines GET, POST, and PATCH for
+organizations and units; unrestricted hard-delete endpoints are intentionally not
+part of Phase 3. Unit ownership cannot be changed through the patch boundary.
+
+Traceability:
+
+- `ORG-001` → Organization domain → `organizations` → repository/use cases →
+  `/api/v1/organizations` → organization authorization tests.
+- `UNIT-001` → Unit domain → `units` → scoped repository/use cases →
+  `/api/v1/units` → unit scope and isolation tests.
+- `ACC-001` → persisted assignments → Phase 2 authorization middleware →
+  protected Phase 3 routes → cross-scope/IDOR tests.
+
 ## Functional Entry Points
 
 | Method | Path                      | Response      | Purpose                                        |
@@ -156,6 +182,15 @@ Phase 2 tasks T2.03–T2.05 add authentication entry points:
 | POST   | `/api/v1/auth/logout` | 200 / 401 / 500 JSON       | Revoke the presented active session |
 | GET    | `/api/v1/auth/me`     | 200 / 401 / 500 JSON       | Resolve user plus assigned access context |
 | GET    | `/api/v1/auth/access/organizations/:organizationId/units/:unitId` | 200 / 401 / 403 / 500 JSON | Phase 2 protected authorization proof |
+
+Phase 3 resource entry points (all require bearer authentication):
+
+| Method | Path | Scope / purpose |
+| ------ | ---- | --------------- |
+| GET / POST | `/api/v1/organizations` | List assigned organizations / platform-authorized create |
+| GET / PATCH | `/api/v1/organizations/:organizationId` | Scoped organization read/update |
+| GET / POST | `/api/v1/units?organization_id=:organizationId` | Scoped unit list/create |
+| GET / PATCH | `/api/v1/units/:unitId?organization_id=:organizationId` | Organization + unit scoped read/update |
 
 Request body (doc 06 §23) — JSON only, no query parameters:
 
@@ -284,15 +319,15 @@ curl http://localhost:3000/api/v1/health/database
 
 The suite follows the doc 09 testing pyramid:
 
-- `tests/unit/` — config resolution, shared envelope, domain scope rules,
-  credential policy, password hasher, session domain/token service, and the
-  login/logout/current-user use cases plus authorization primitives (T2.03–T2.10)
-- `tests/api/` — API contract and secret-leakage assertions, including the
-  login, logout, user-context and protected-access contracts (T2.03–T2.10)
+- `tests/unit/` — config/shared primitives, Phase 2 authentication and
+  authorization, plus Phase 3 organization/unit domain validation.
+- `tests/api/` — authentication contracts and Phase 3 organization/unit success,
+  validation, permission, cross-scope, and IDOR behavior.
 - `tests/integration/` — surface composition, request boundary, build artifact,
-  migrations, repository isolation, and the credential repository (T2.03)
-- `tests/e2e/` — Phase 3+, excluded from `npm test` so an empty suite can never
-  be misreported as coverage
+  migrations, repository isolation, credential persistence, organization/unit
+  persistence, foreign keys, and scoped update behavior.
+- `tests/e2e/` — reserved for later browser-level journeys and excluded from
+  `npm test` so an empty suite is never misreported as coverage.
 
 `tests/integration/build-artifact.test.ts` asserts the **built** `dist/_worker.js`.
 This is deliberate: source-level tests cannot detect a bundling failure, and two
@@ -307,11 +342,10 @@ dropped during bundling) passed every source test while failing at runtime.
   the plugin default `src/index.tsx` does not exist in this repository)
 - **Tech stack**: Hono + TypeScript + Vite + Cloudflare D1
 - **Runtime verification**: `/`, `/api/v1/health`, `/api/v1/meta`,
-  `/api/v1/health/database`, `POST /api/v1/auth/login`,
-  `POST /api/v1/auth/logout`, `GET /api/v1/auth/me`, static assets and the 404 boundary
-- **Status**: Active at https://qima.pages.dev. Phase 0, Phase 1 and all Phase 2
-  tasks T2.01–T2.10 are verified locally. Production verification is recorded
-  after each successful deployment.
+  `/api/v1/health/database`, authentication routes, protected organization/unit
+  routes, static assets, and the 404 boundary.
+- **Status**: Active at https://qima.pages.dev. Phase 0–3 are verified locally;
+  production verification is recorded after each successful deployment.
 - **Production data**: D1 migrations `0000`–`0004` are applied to
   `qima-production`; deterministic role/permission seeds are applied.
 - **Last deployed**: 2026-09-03 via the BYOK Cloudflare Pages workflow.
@@ -330,12 +364,12 @@ owner supplies the real binding and any secret only during deployment.
 - Login rate limiting / lockout. The endpoint bounds password length and
   equalizes response timing, but throttling repeated attempts needs a shared
   counter (D1 or KV) and belongs with the wider authentication hardening task.
-- Organization / unit / program endpoints (Phase 3)
-- Product UI screens beyond the bootstrap shell, including a login screen
-- End-to-end critical journey tests (Phase 3+)
+- Program lifecycle and API (Phase 4)
+- Product UI screens beyond the bootstrap shell, including login and resource screens
+- Browser-level end-to-end critical journey tests
 - Reporting, billing and external integrations (later phases)
 
 ## Next Recommended Step
 
-Phase 3 — Organization & Unit. Implement organization/unit CRUD only after
-preserving the Phase 2 middleware and scoped repository boundary established here.
+Phase 4 — Program. Implement the program lifecycle using the Phase 3 unit-owned
+scope boundary without expanding into Activity or later business modules.

@@ -23,6 +23,7 @@ type AuthorizationEnvironment = {
 
 export interface AuthorizationPolicy {
   readonly organizationParam?: string;
+  readonly organizationQuery?: string;
   readonly unitParam?: string;
   readonly roles?: readonly RoleKey[];
   readonly permission?: string;
@@ -32,6 +33,8 @@ function databaseOf(env: QimaBindings | undefined): QimaDatabase | null {
   const binding = env?.DB;
   return binding === undefined || binding === null ? null : (binding as unknown as QimaDatabase);
 }
+
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 /** Authenticate once and attach an immutable principal to Hono request context. */
 export const requireAuthentication: MiddlewareHandler<AuthorizationEnvironment> = async (c, next) => {
@@ -85,10 +88,16 @@ export function requireAuthorization(
   return async (c, next) => {
     const organizationId = policy.organizationParam
       ? (c.req.param(policy.organizationParam) ?? null)
-      : null;
+      : policy.organizationQuery
+        ? (c.req.query(policy.organizationQuery) ?? null)
+        : null;
     const unitId = policy.unitParam ? (c.req.param(policy.unitParam) ?? null) : null;
 
-    if ((policy.organizationParam && !organizationId) || (policy.unitParam && !unitId)) {
+    if (
+      ((policy.organizationParam || policy.organizationQuery) &&
+        (organizationId === null || !UUID_PATTERN.test(organizationId))) ||
+      (policy.unitParam && (unitId === null || !UUID_PATTERN.test(unitId)))
+    ) {
       return c.json(
         failure('VALIDATION_ERROR', 'A valid authorization scope is required.'),
         ERROR_STATUS.VALIDATION_ERROR,

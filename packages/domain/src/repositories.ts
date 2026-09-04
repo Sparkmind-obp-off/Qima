@@ -10,9 +10,9 @@
  *   The contract makes the scope a REQUIRED argument, so an unscoped read
  *   cannot even be expressed through this interface.
  *
- * Phase 1 exposes read/lookup operations plus the audit append operation.
- * Mutating organization/unit use cases are Phase 3
- * (doc 10 §24 PHASE 3 — ORGANIZATION & UNIT) and are not declared here.
+ * Phase 1 established read/lookup operations plus the audit append operation.
+ * Phase 3 adds the organization/unit mutation contracts defined by doc 10 §24
+ * while preserving mandatory scope arguments on every unit operation.
  */
 
 import type {
@@ -27,6 +27,7 @@ import type {
   User,
 } from './identity';
 import type { ScopedRoleAssignment } from './authorization';
+import type { OrganizationPatch, OrganizationValues, UnitPatch, UnitValues } from './organization';
 
 /** doc 06 §34 Pagination. */
 export interface PageRequest {
@@ -42,9 +43,12 @@ export interface Page<T> {
 }
 
 export interface OrganizationRepository {
+  create(id: string, values: OrganizationValues): Promise<Organization>;
   findById(id: string): Promise<Organization | null>;
   findBySlug(slug: string): Promise<Organization | null>;
   list(page: PageRequest): Promise<Page<Organization>>;
+  listByIds(ids: readonly string[], page: PageRequest): Promise<Page<Organization>>;
+  update(id: string, patch: OrganizationPatch): Promise<Organization | null>;
 }
 
 /**
@@ -53,9 +57,11 @@ export interface OrganizationRepository {
  * knowing its identifier (doc 06 §8).
  */
 export interface UnitRepository {
+  create(organizationId: string, id: string, values: UnitValues): Promise<Unit>;
   findById(organizationId: string, id: string): Promise<Unit | null>;
   findBySlug(organizationId: string, slug: string): Promise<Unit | null>;
   listByOrganization(organizationId: string, page: PageRequest): Promise<Page<Unit>>;
+  update(organizationId: string, id: string, patch: UnitPatch): Promise<Unit | null>;
 }
 
 export interface SiteRepository {
