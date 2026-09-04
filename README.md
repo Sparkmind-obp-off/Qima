@@ -345,10 +345,12 @@ dropped during bundling) passed every source test while failing at runtime.
   `/api/v1/health/database`, authentication routes, protected organization/unit
   routes, static assets, and the 404 boundary.
 - **Status**: Active at https://qima.pages.dev. Phase 0–3 are verified locally;
-  production verification is recorded after each successful deployment.
+  production health, database connectivity, Phase 3 metadata, and protected-route
+  authentication boundaries were verified after deployment.
 - **Production data**: D1 migrations `0000`–`0004` are applied to
   `qima-production`; deterministic role/permission seeds are applied.
-- **Last deployed**: 2026-09-03 via the BYOK Cloudflare Pages workflow.
+- **Last deployed**: 2026-09-04 via the BYOK Cloudflare Pages workflow
+  (`https://893618a7.qima.pages.dev`, promoted at `https://qima.pages.dev`).
 
 Deployment uses the account-owned `qima` Pages project and `qima-production`
 D1 database. The committed `database_id` remains a safe placeholder; the account
