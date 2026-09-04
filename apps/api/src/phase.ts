@@ -22,6 +22,7 @@ export const QIMA_PHASE_IDS = [
   'phase-2-authentication-access',
   'phase-3-organization-unit',
   'phase-4-program',
+  'phase-5-activity',
 ] as const;
 
 export type QimaPhaseId = (typeof QIMA_PHASE_IDS)[number];
@@ -31,4 +32,4 @@ export type QimaPhaseId = (typeof QIMA_PHASE_IDS)[number];
  *
  * Advanced only when the phase's exit criteria (doc 10 §24) are actually met.
  */
-export const QIMA_CURRENT_PHASE: QimaPhaseId = 'phase-4-program';
+export const QIMA_CURRENT_PHASE: QimaPhaseId = 'phase-5-activity';

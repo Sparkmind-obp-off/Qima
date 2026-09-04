@@ -16,6 +16,7 @@ import { Hono } from 'hono';
 import { loadQimaConfig } from '@qima/config';
 import type { QimaBindings } from '../../api/src/bindings';
 import { QIMA_CURRENT_PHASE } from '../../api/src/phase';
+import { renderActivityShell } from './activity-shell';
 import { renderProgramShell } from './program-shell';
 import { renderBootstrapShell } from './shell';
 
@@ -28,6 +29,15 @@ web.get('/programs/:programId/edit', (c) =>
 );
 web.get('/programs/:programId', (c) =>
   c.html(renderProgramShell({ mode: 'detail', programId: c.req.param('programId') })),
+);
+
+web.get('/activities', (c) => c.html(renderActivityShell({ mode: 'list' })));
+web.get('/activities/new', (c) => c.html(renderActivityShell({ mode: 'create' })));
+web.get('/activities/:activityId/edit', (c) =>
+  c.html(renderActivityShell({ mode: 'edit', activityId: c.req.param('activityId') })),
+);
+web.get('/activities/:activityId', (c) =>
+  c.html(renderActivityShell({ mode: 'detail', activityId: c.req.param('activityId') })),
 );
 
 web.get('/', (c) => {

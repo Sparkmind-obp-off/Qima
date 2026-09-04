@@ -731,11 +731,40 @@ T5.05 Activity API
 T5.06 Activity UI
 T5.07 Activity tests
 
+Verified implementation status (2026-09-04):
+
+✓ T5.01 Activity schema, constraints, indexes, Unit foreign key, and same-Unit Program integrity
+✓ T5.02 Activity domain lifecycle, UTC schedule, required-field, and update validation
+✓ T5.03 Unit-scoped ActivityRepository create/read/update/list/soft-delete persistence
+✓ T5.04 CreateActivity, UpdateActivity, GetActivity, ListActivities, and DeleteActivity use cases
+✓ T5.05 Authenticated Activity API with role/permission enforcement and bounded filtering/pagination
+✓ T5.06 Activity list, detail, create, and edit UI integrated with Program selection
+✓ T5.07 Domain, migration, repository, API, UI, security, IDOR, and regression tests
+
+Evidence:
+
+- `database/migrations/0007_phase5_activity_schema.sql`
+- `database/seeds/0003_phase5_activity_permissions.sql`
+- `packages/domain/src/activity.ts`
+- `packages/domain/src/repositories.ts`
+- `apps/api/src/infrastructure/database/repositories.ts`
+- `apps/api/src/application/activity/activity-use-cases.ts`
+- `apps/api/src/modules/activity/routes.ts`
+- `apps/web/src/activity-shell.ts`
+- `public/static/activities.js`
+- `tests/unit/phase5-activity-domain.test.ts`
+- `tests/integration/phase5-activity-repository.test.ts`
+- `tests/integration/phase5-activity-ui.test.ts`
+- `tests/api/phase5-activity.test.ts`
+
+Verified quality gates: `npm run verify` — 38 test files / 519 tests passed, including Phase 2–4 regression suites.
+
 Exit Criteria:
 
 ✓ Activity works
 ✓ Program relationship valid
-✓ Scope enforced
+✓ Organization and Unit scope enforced server-side
+✓ Known-ID IDOR, scope manipulation, Program manipulation, query tampering, and pagination enumeration blocked
 PHASE 6 — PARTICIPANT
 
 Tasks:

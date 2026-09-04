@@ -51,6 +51,7 @@ describe('worker bundle', () => {
     expect(bundle).toContain('/organizations');
     expect(bundle).toContain('/units');
     expect(bundle).toContain('/programs');
+    expect(bundle).toContain('/activities');
     expect(bundle).toContain('API route not found.');
   });
 

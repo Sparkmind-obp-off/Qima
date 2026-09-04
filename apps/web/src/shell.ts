@@ -28,6 +28,7 @@ const PHASE_TITLES: Readonly<Record<string, string>> = {
   'phase-2-authentication-access': 'Phase 2 — Authentication & Access',
   'phase-3-organization-unit': 'Phase 3 — Organization & Unit',
   'phase-4-program': 'Phase 4 — Program',
+  'phase-5-activity': 'Phase 5 — Activity',
 };
 
 function phaseTitle(phase: string): string {
@@ -62,8 +63,8 @@ export function renderBootstrapShell(props: BootstrapShellProps): string {
   <p class="label">QIMA Platform</p>
   <h1>${title}</h1>
   <p class="body-large">
-    Lifecycle Program QIMA aktif dalam batas organisasi dan unit yang diotorisasi
-    serta ditegakkan di server.
+    Lifecycle Program dan Activity QIMA aktif dalam batas organisasi dan unit yang
+    diotorisasi serta ditegakkan di server.
   </p>
 </header>
 
@@ -99,6 +100,7 @@ export function renderBootstrapShell(props: BootstrapShellProps): string {
       <li>Autentikasi, sesi, role, permission, dan scope server-owned</li>
       <li>API organisasi dan unit dengan isolasi lintas organisasi/unit</li>
       <li>Lifecycle Program: schema, domain, repository, API, UI, dan pengujian scope</li>
+      <li>Lifecycle Activity serta relasi Program dengan isolasi organisasi/unit dan IDOR protection</li>
     </ul>
   </section>
 </main>

@@ -26,6 +26,7 @@
 export * from './identity';
 export * from './organization';
 export * from './program';
+export * from './activity';
 export * from './repositories';
 export * from './schema';
 

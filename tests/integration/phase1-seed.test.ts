@@ -111,7 +111,7 @@ describe('Phase 1 seed', () => {
     }
   });
 
-  it('seeds Program permissions without granting later-phase capabilities', async () => {
+  it('seeds Program and Activity permissions without granting later-phase capabilities', async () => {
     const database = await createMigratedDatabase({ seed: true });
 
     try {
@@ -121,9 +121,10 @@ describe('Phase 1 seed', () => {
       const resources = new Set(rows.map((row) => row.resource));
 
       expect(resources.has('programs')).toBe(true);
+      expect(resources.has('activities')).toBe(true);
 
-      // doc 10 §24: these capabilities arrive after Phase 4.
-      for (const future of ['activities', 'participants', 'registrations']) {
+      // doc 10 §24: these capabilities arrive after Phase 5.
+      for (const future of ['participants', 'registrations']) {
         expect(resources.has(future), `premature permission resource: ${future}`).toBe(false);
       }
     } finally {

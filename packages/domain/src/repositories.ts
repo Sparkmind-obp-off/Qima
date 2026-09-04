@@ -27,6 +27,7 @@ import type {
   User,
 } from './identity';
 import type { ScopedRoleAssignment } from './authorization';
+import type { Activity, ActivityPatch, ActivityValues } from './activity';
 import type { OrganizationPatch, OrganizationValues, UnitPatch, UnitValues } from './organization';
 import type { Program, ProgramPatch, ProgramValues } from './program';
 
@@ -77,6 +78,21 @@ export interface ProgramRepository {
   findBySlug(unitId: string, slug: string): Promise<Program | null>;
   listByUnit(unitId: string, request: ProgramListRequest): Promise<Page<Program>>;
   update(unitId: string, id: string, patch: ProgramPatch): Promise<Program | null>;
+  softDelete(unitId: string, id: string): Promise<boolean>;
+}
+
+/** Every Activity operation requires the server-authorized unit scope. */
+export interface ActivityListRequest extends PageRequest {
+  readonly search?: string;
+  readonly status?: Activity['status'];
+  readonly programId?: string;
+}
+
+export interface ActivityRepository {
+  create(unitId: string, id: string, values: ActivityValues): Promise<Activity>;
+  findById(unitId: string, id: string): Promise<Activity | null>;
+  listByUnit(unitId: string, request: ActivityListRequest): Promise<Page<Activity>>;
+  update(unitId: string, id: string, patch: ActivityPatch): Promise<Activity | null>;
   softDelete(unitId: string, id: string): Promise<boolean>;
 }
 

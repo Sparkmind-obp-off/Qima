@@ -32,12 +32,14 @@ Implementation follows:
 - **Phase 4 — Program** — implemented and verified end-to-end: scoped Program
   schema/domain/repository, create/read/list/update/delete API, Program list/detail/form
   UI, authorization, organization/unit isolation, and IDOR regression coverage.
+- **Phase 5 — Activity** — implemented and verified end-to-end: Unit-owned Activity
+  schema/domain/repository, optional same-Unit Program relationship, create/read/list/update/delete
+  API, Activity list/detail/form UI, authorization, scope isolation, and IDOR coverage.
 
-`QIMA_CURRENT_PHASE` (`apps/api/src/phase.ts`) reports `phase-4-program` because
-all doc 10 §24 Phase 4 exit criteria passed the repository quality gates.
-Phase 5 (Activity) is the next execution target.
+`QIMA_CURRENT_PHASE` (`apps/api/src/phase.ts`) reports `phase-5-activity` because
+all doc 10 §24 Phase 5 exit criteria passed the repository quality gates.
 
-Activity and all later business modules remain deliberately unimplemented.
+Participant and all later business modules remain deliberately unimplemented.
 
 ## Principles
 
@@ -181,6 +183,23 @@ CreateProgram / UpdateProgram / ListPrograms → `/api/v1/programs` → Program 
 Phase 4 test suites. Program ownership remains immutable and server-enforced through
 the authorized organization/unit context.
 
+## Phase 5 — Implemented Tasks
+
+| Task | Scope | Status |
+| ---- | ----- | ------ |
+| T5.01 | Activity schema, relationships, constraints, and indexes | Complete |
+| T5.02 | Activity domain lifecycle and schedule validation | Complete |
+| T5.03 | Unit-scoped Activity repository | Complete |
+| T5.04 | Create/Read/Update/List/Delete Activity use cases | Complete |
+| T5.05 | Authenticated and authorized Activity API | Complete |
+| T5.06 | Activity list, detail, create, and edit UI | Complete |
+| T5.07 | Domain, migration, repository, API, UI, security, and regression tests | Complete |
+
+Traceability: `ACT-001` → Activity domain → `activities` → `ActivityRepository` →
+CreateActivity / UpdateActivity / ListActivities → `/api/v1/activities` → Activity UI →
+Phase 5 test suites. Activity Unit ownership is server-controlled; optional Program
+associations are accepted only when the Program belongs to the same authorized Unit.
+
 ## Functional Entry Points
 
 | Method | Path                      | Response      | Purpose                                        |
@@ -223,6 +242,18 @@ Phase 4 Program entry points require bearer authentication plus an authorized
 | GET | `/programs/new` | Program creation UI |
 | GET | `/programs/:programId` | Program detail UI |
 | GET | `/programs/:programId/edit` | Program edit UI |
+
+Phase 5 Activity entry points require bearer authentication plus an authorized
+`organization_id` / `unit_id` scope pair:
+
+| Method | Path | Scope / purpose |
+| ------ | ---- | --------------- |
+| GET / POST | `/api/v1/activities?organization_id=:organizationId&unit_id=:unitId` | Scoped list/create; optional `program_id`, `status`, `search`, `page`, and `limit` filters |
+| GET / PATCH / DELETE | `/api/v1/activities/:activityId?organization_id=:organizationId&unit_id=:unitId` | Scoped read/update/soft-delete |
+| GET | `/activities` | Activity list UI |
+| GET | `/activities/new` | Activity creation UI |
+| GET | `/activities/:activityId` | Activity detail UI |
+| GET | `/activities/:activityId/edit` | Activity edit UI |
 
 Request body (doc 06 §23) — JSON only, no query parameters:
 
@@ -294,8 +325,8 @@ Error codes: `VALIDATION_ERROR`, `UNAUTHENTICATED`, `FORBIDDEN`, `NOT_FOUND`,
 - **Migrations**: `database/migrations`, applied via wrangler
 - **Schema**: migrations `0000`–`0003` deliver the Phase 1 identity, access
   control, audit and settings schema; migration `0004` adds sessions, `0005`
-  adds explicit platform-role assignments, and `0006` adds the Unit-owned Program
-  schema without introducing any Phase 5 tables.
+  adds explicit platform-role assignments, `0006` adds the Unit-owned Program
+  schema, and additive migration `0007` adds Activity plus same-Unit Program integrity.
 - **Credential boundary**: `users.password_hash` is selected by exactly ONE
   module, `apps/api/src/infrastructure/database/user-credential-repository.ts`.
   The general user read (`createUserRepository`) selects an explicit column list
@@ -353,12 +384,14 @@ curl http://localhost:3000/api/v1/health/database
 The suite follows the doc 09 testing pyramid:
 
 - `tests/unit/` — config/shared primitives, Phase 2 authentication and
-  authorization, Phase 3 organization/unit rules, and Phase 4 Program invariants.
-- `tests/api/` — authentication contracts plus organization/unit/Program success,
-  validation, permission, cross-scope, and IDOR behavior.
+  authorization, Phase 3 organization/unit rules, Phase 4 Program invariants, and
+  Phase 5 Activity lifecycle/schedule invariants.
+- `tests/api/` — authentication contracts plus organization/unit/Program/Activity
+  success, validation, permission, Program relationship, cross-scope, query tampering,
+  pagination enumeration, and IDOR behavior.
 - `tests/integration/` — surface composition, request boundary, build artifact,
   migrations, repository isolation, credential persistence, organization/unit and
-  Program persistence, foreign keys, scoped mutation, and Program UI routes.
+  Program and Activity persistence, foreign keys, scoped mutation, and Program/Activity UI routes.
 - `tests/e2e/` — reserved for later browser-level journeys and excluded from
   `npm test` so an empty suite is never misreported as coverage.
 
@@ -400,13 +433,13 @@ owner supplies the real binding and any secret only during deployment.
 - Login rate limiting / lockout. The endpoint bounds password length and
   equalizes response timing, but throttling repeated attempts needs a shared
   counter (D1 or KV) and belongs with the wider authentication hardening task.
-- Activity lifecycle and API (Phase 5)
-- Product UI screens beyond the bootstrap shell and Phase 4 Program screens,
+- Participant lifecycle and API (Phase 6)
+- Product UI screens beyond the bootstrap shell, Program, and Activity screens,
   including login and later resource screens
 - Browser-level end-to-end critical journey tests
 - Reporting, billing and external integrations (later phases)
 
 ## Next Recommended Step
 
-Phase 5 — Activity, using the verified Phase 4 Program boundary without expanding
-into Participant or later business modules.
+Phase 5 is complete. Keep Phase 6 Participant unimplemented until its execution cycle
+is explicitly authorized; preserve the verified Program → Activity scope boundary.

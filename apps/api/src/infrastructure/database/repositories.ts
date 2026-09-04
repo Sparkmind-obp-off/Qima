@@ -17,6 +17,12 @@
 
 import type {
   AccessAssignmentRepository,
+  Activity,
+  ActivityListRequest,
+  ActivityPatch,
+  ActivityRepository,
+  ActivityStatus,
+  ActivityValues,
   AuditEvent,
   AuditEventInput,
   AuditRepository,
@@ -85,6 +91,22 @@ interface ProgramRow {
   start_date: string | null;
   end_date: string | null;
   capacity: number | null;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+}
+
+interface ActivityRow {
+  id: string;
+  unit_id: string;
+  program_id: string | null;
+  title: string;
+  description: string | null;
+  activity_type: string;
+  start_at: string;
+  end_at: string | null;
+  location: string | null;
+  status: string;
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
@@ -220,6 +242,24 @@ function toProgram(row: ProgramRow): Program {
     startDate: row.start_date,
     endDate: row.end_date,
     capacity: row.capacity,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    deletedAt: row.deleted_at,
+  };
+}
+
+function toActivity(row: ActivityRow): Activity {
+  return {
+    id: row.id,
+    unitId: row.unit_id,
+    programId: row.program_id,
+    title: row.title,
+    description: row.description,
+    activityType: row.activity_type,
+    startAt: row.start_at,
+    endAt: row.end_at,
+    location: row.location,
+    status: row.status as ActivityStatus,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     deletedAt: row.deleted_at,
@@ -597,6 +637,119 @@ export function createProgramRepository(db: QimaDatabase): ProgramRepository {
       await execute(
         db,
         `update programs
+            set deleted_at = strftime('%Y-%m-%dT%H:%M:%SZ', 'now'),
+                updated_at = strftime('%Y-%m-%dT%H:%M:%SZ', 'now')
+          where unit_id = ? and id = ? and deleted_at is null`,
+        [unitId, id],
+      );
+      return true;
+    },
+  };
+}
+
+export function createActivityRepository(db: QimaDatabase): ActivityRepository {
+  return {
+    async create(unitId: string, id: string, values: ActivityValues) {
+      await execute(
+        db,
+        `insert into activities
+           (id, unit_id, program_id, title, description, activity_type, start_at, end_at, location, status)
+         values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          id,
+          unitId,
+          values.programId,
+          values.title,
+          values.description,
+          values.activityType,
+          values.startAt,
+          values.endAt,
+          values.location,
+          values.status,
+        ],
+      );
+      const created = await this.findById(unitId, id);
+      if (created === null) throw new Error('Activity could not be persisted.');
+      return created;
+    },
+
+    async findById(unitId, id) {
+      const row = await queryFirst<ActivityRow>(
+        db,
+        'select * from activities where unit_id = ? and id = ? and deleted_at is null',
+        [unitId, id],
+      );
+      return row === null ? null : toActivity(row);
+    },
+
+    async listByUnit(unitId, request: ActivityListRequest) {
+      const predicates = ['unit_id = ?', 'deleted_at is null'];
+      const parameters: unknown[] = [unitId];
+      if (request.status !== undefined) {
+        predicates.push('status = ?');
+        parameters.push(request.status);
+      }
+      if (request.programId !== undefined) {
+        predicates.push('program_id = ?');
+        parameters.push(request.programId);
+      }
+      if (request.search !== undefined) {
+        predicates.push(
+          `(lower(title) like ? escape '\\' or lower(activity_type) like ? escape '\\' or lower(coalesce(location, '')) like ? escape '\\')`,
+        );
+        const pattern = `%${request.search
+          .toLowerCase()
+          .replace(/\\/g, '\\\\')
+          .replace(/%/g, '\\%')
+          .replace(/_/g, '\\_')}%`;
+        parameters.push(pattern, pattern, pattern);
+      }
+      const where = predicates.join(' and ');
+      const rows = await queryAll<ActivityRow>(
+        db,
+        `select * from activities where ${where}
+         order by start_at desc, title limit ? offset ?`,
+        [...parameters, request.perPage, offsetOf(request)],
+      );
+      const total = await queryCount(db, `select count(*) as total from activities where ${where}`, parameters);
+      return toPage(rows.map(toActivity), request, total);
+    },
+
+    async update(unitId: string, id: string, patch: ActivityPatch) {
+      const columns: string[] = [];
+      const values: unknown[] = [];
+      for (const [field, column] of [
+        ['programId', 'program_id'],
+        ['title', 'title'],
+        ['description', 'description'],
+        ['activityType', 'activity_type'],
+        ['startAt', 'start_at'],
+        ['endAt', 'end_at'],
+        ['location', 'location'],
+        ['status', 'status'],
+      ] as const) {
+        if (patch[field] !== undefined) {
+          columns.push(`${column} = ?`);
+          values.push(patch[field]);
+        }
+      }
+      if (columns.length === 0) return this.findById(unitId, id);
+      columns.push("updated_at = strftime('%Y-%m-%dT%H:%M:%SZ', 'now')");
+      await execute(
+        db,
+        `update activities set ${columns.join(', ')}
+         where unit_id = ? and id = ? and deleted_at is null`,
+        [...values, unitId, id],
+      );
+      return this.findById(unitId, id);
+    },
+
+    async softDelete(unitId, id) {
+      const existing = await this.findById(unitId, id);
+      if (existing === null) return false;
+      await execute(
+        db,
+        `update activities
             set deleted_at = strftime('%Y-%m-%dT%H:%M:%SZ', 'now'),
                 updated_at = strftime('%Y-%m-%dT%H:%M:%SZ', 'now')
           where unit_id = ? and id = ? and deleted_at is null`,
