@@ -44,6 +44,49 @@ all doc 10 §24 Phase 6 exit criteria passed the repository quality gates.
 
 Registration and all later business modules remain deliberately unimplemented.
 
+## P1 Meeting Demo
+
+The repository includes a presentation-only experience for stakeholder validation. It
+uses centralized static demo data and browser-local simulated interactions; it does
+not authenticate against, read from, or write to the production application data path.
+
+### Demo entry points
+
+| Path | Purpose |
+| --- | --- |
+| `/demo` | Public QIMA + RQ Blumbang landing, programs, activities, unit context, and registration simulation |
+| `/demo/admin/login` | Explicit simulated admin gate; no production credentials |
+| `/demo/admin` | Operational dashboard, program/activity/registration/participant views, and unit switcher |
+
+### Completed demo capabilities
+
+- Connected Public → Program → Registration → Success → Admin journey.
+- Shared QIMA platform identity with configurable RQ Blumbang/QIMA unit context that remains consistent across the public, login, and admin demo journey.
+- Responsive public navigation and responsive admin drawer.
+- Keyboard-visible focus, labelled dialogs/forms, trapped modal focus, escape-to-close behavior, reduced-motion support, and semantic landmarks.
+- Loading, validation, submitting, success, empty-search, disabled, hover, and focus states.
+- Explicit demo-data and non-production boundaries throughout the journey.
+
+### Demo user guide
+
+1. Open `/demo` and use **Jelajahi Program**.
+2. Open a program, continue to registration, and submit fictional details.
+3. Continue from the simulated success state to `/demo/admin/login`.
+4. Enter the admin simulation and navigate Programs, Activities, Registrations, and Participants.
+5. Use **Unit Context** to demonstrate one shared core with a different unit identity.
+
+### Not yet implemented
+
+- Production registration persistence, approval workflow, attendance, reporting, notifications, and payments.
+- Production authentication for demo routes; the demo login is deliberately simulated.
+- Human visual approval across the final target device/browser matrix.
+
+### Recommended next gate
+
+Run meeting validation using DOC 12, record accepted feedback, freeze the validated UX
+direction, then continue production Registration as the next planned vertical slice.
+Do not connect the prototype registration simulation to D1 as a shortcut.
+
 ## Principles
 
 - Contract-first implementation

@@ -89,3 +89,53 @@ describe('surface composition', () => {
     expect(webResponse.headers.get('content-type')).toContain('text/html');
   });
 });
+
+describe('P1 meeting demo surfaces', () => {
+  it.each(['/demo', '/demo/admin/login', '/demo/admin'])(
+    'serves %s as an explicit non-production HTML experience',
+    async (path) => {
+      const response = await app.request(path, {}, { APP_ENV: 'test' });
+      const html = await response.text();
+
+      expect(response.status).toBe(200);
+      expect(response.headers.get('content-type')).toContain('text/html');
+      expect(html).toContain('DEMO');
+      expect(html).toMatch(/tidak (tersimpan|terhubung|memerlukan)/i);
+    },
+  );
+
+  it('exposes an accessible public journey and unit context', async () => {
+    const response = await app.request('/demo', {}, { APP_ENV: 'test' });
+    const html = await response.text();
+
+    expect(html).toContain('id="main-content"');
+    expect(html).toContain('id="program-grid"');
+    expect(html).toContain('id="demo-flow"');
+    expect(html).toContain('id="flow-content" aria-live="polite"');
+    expect(html).toContain('aria-label="Navigasi utama"');
+    expect(html).toContain('aria-pressed="true"');
+    expect(html).toContain('QIMA PLATFORM');
+    expect(html).toContain('RQ Blumbang');
+  });
+
+  it('keeps the admin demo connected to public and unit context', async () => {
+    const response = await app.request('/demo/admin', {}, { APP_ENV: 'test' });
+    const html = await response.text();
+
+    expect(html).toContain('href="/demo"');
+    expect(html).toContain('id="admin-unit-switcher"');
+    expect(html).toContain('id="admin-sidebar"');
+    expect(html).toContain('aria-pressed="true"');
+    expect(html).toContain('Data operasional statis');
+  });
+
+  it('keeps unit identity hooks available across the public, login, and admin journey', async () => {
+    const publicHtml = await (await app.request('/demo', {}, { APP_ENV: 'test' })).text();
+    const loginHtml = await (await app.request('/demo/admin/login', {}, { APP_ENV: 'test' })).text();
+    const adminHtml = await (await app.request('/demo/admin', {}, { APP_ENV: 'test' })).text();
+
+    expect(publicHtml).toContain('data-unit="qima"');
+    expect(loginHtml).toContain('id="login-unit-name"');
+    expect(adminHtml).toContain('data-admin-unit-name');
+  });
+});

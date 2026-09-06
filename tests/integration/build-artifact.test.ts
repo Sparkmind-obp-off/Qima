@@ -74,12 +74,16 @@ describe('worker bundle', () => {
 });
 
 describe('static assets', () => {
-  it('ships the design tokens and bootstrap client script', async () => {
+  it('ships the design tokens and all presentation scripts', async () => {
     expect(await exists(resolve(distDir, 'static/tokens.css'))).toBe(true);
     expect(await exists(resolve(distDir, 'static/bootstrap.js'))).toBe(true);
     expect(await exists(resolve(distDir, 'static/programs.js'))).toBe(true);
     expect(await exists(resolve(distDir, 'static/activities.js'))).toBe(true);
     expect(await exists(resolve(distDir, 'static/participants.js'))).toBe(true);
+    expect(await exists(resolve(distDir, 'static/prototype.css'))).toBe(true);
+    expect(await exists(resolve(distDir, 'static/prototype-flow.css'))).toBe(true);
+    expect(await exists(resolve(distDir, 'static/prototype.js'))).toBe(true);
+    expect(await exists(resolve(distDir, 'static/prototype-admin.js'))).toBe(true);
   });
 
   it('excludes static assets from the worker route so they are served directly', async () => {

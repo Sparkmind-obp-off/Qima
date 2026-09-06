@@ -1,16 +1,262 @@
-const views={
- dashboard:{title:'Dashboard',html:document.querySelector('#admin-dashboard')?.outerHTML||''},
- programs:{title:'Program',html:`<div class="admin-heading"><div><span class="eyebrow">PROGRAM MANAGEMENT</span><h1>Program</h1><p>Kelola program pembelajaran pada unit aktif.</p></div><button class="admin-primary" data-toast="Form Program Baru — demo">+ Program Baru</button></div><div class="admin-panel table-panel"><div class="table-row table-head"><span>Program</span><span>Peserta</span><span>Status</span><span>Aksi</span></div>${[['Tahsin & Tahfidz','42','Aktif'],['Kelas Qur’an Anak','31','Aktif'],['Kajian Qur’ani','55','Aktif']].map(x=>`<div class="table-row"><strong>${x[0]}</strong><span>${x[1]} peserta</span><em class="status approved">${x[2]}</em><button data-toast="Detail program demo">Kelola →</button></div>`).join('')}</div>`},
- registrations:{title:'Pendaftaran',html:`<div class="admin-heading"><div><span class="eyebrow">REGISTRATION INBOX</span><h1>Pendaftaran</h1><p>Tinjau calon peserta dari public experience.</p></div><button class="admin-primary" data-toast="Filter demo aktif">Filter</button></div><div class="admin-panel table-panel"><div class="table-row table-head"><span>Nama</span><span>Program</span><span>Tanggal</span><span>Status</span></div>${[['Ahmad Rizky','Tahsin & Tahfidz','06 Sep 2026','Menunggu'],['Nabila Aulia',"Kelas Qur'an Anak",'05 Sep 2026','Diterima'],['Fajar Hidayat','Tahsin & Tahfidz','05 Sep 2026','Diterima'],['Siti Rahma','Kajian Qur’ani','04 Sep 2026','Menunggu'],['Dimas Pratama','Tahsin & Tahfidz','03 Sep 2026','Diterima']].map(x=>`<div class="table-row"><strong>${x[0]}</strong><span>${x[1]}</span><span>${x[2]}</span><em class="status ${x[3]==='Diterima'?'approved':'pending'}">${x[3]}</em></div>`).join('')}</div>`},
- activities:{title:'Aktivitas',html:`<div class="admin-heading"><div><span class="eyebrow">ACTIVITY MANAGEMENT</span><h1>Aktivitas</h1><p>Agenda kegiatan unit yang akan datang.</p></div><button class="admin-primary" data-toast="Form Aktivitas — demo">+ Aktivitas</button></div><div class="admin-panel table-panel"><div class="table-row table-head"><span>Agenda</span><span>Waktu</span><span>Peserta</span><span>Status</span></div>${[['Setoran Hafalan','07 Sep · 16.00','28','Terjadwal'],["Kelas Qur'an Anak",'10 Sep · 15.30','31','Terjadwal'],['Kajian Qur’ani','14 Sep · 19.30','55','Terjadwal']].map(x=>`<div class="table-row"><strong>${x[0]}</strong><span>${x[1]}</span><span>${x[2]}</span><em class="status approved">${x[3]}</em></div>`).join('')}</div>`},
- participants:{title:'Peserta',html:`<div class="admin-heading"><div><span class="eyebrow">PARTICIPANT DIRECTORY</span><h1>Peserta</h1><p>Daftar peserta aktif pada unit RQ Blumbang.</p></div><button class="admin-primary" data-toast="Tambah peserta — demo">+ Peserta</button></div><div class="admin-panel table-panel"><div class="table-row table-head"><span>Nama</span><span>Program</span><span>Keaktifan</span><span>Status</span></div>${[['Ahmad Rizky','Tahsin & Tahfidz','Aktif','Aktif'],['Nabila Aulia',"Kelas Qur'an Anak",'Aktif','Aktif'],['Fajar Hidayat','Tahsin & Tahfidz','Aktif','Aktif'],['Siti Rahma','Kajian Qur’ani','Aktif','Aktif']].map(x=>`<div class="table-row"><strong>${x[0]}</strong><span>${x[1]}</span><span>${x[2]}</span><em class="status approved">${x[3]}</em></div>`).join('')}</div>`}
+const demoRows = {
+  programs: [
+    ['Tahsin & Tahfidz', '42 peserta', 'Senin & Kamis', 'Aktif'],
+    ["Kelas Qur'an Anak", '31 peserta', 'Sabtu', 'Aktif'],
+    ["Kajian Qur'ani", '55 peserta', 'Jumat', 'Aktif'],
+  ],
+  registrations: [
+    ['Ahmad Rizky', 'Tahsin & Tahfidz', '06 Sep 2026', 'Menunggu'],
+    ['Nabila Aulia', "Kelas Qur'an Anak", '05 Sep 2026', 'Diterima'],
+    ['Fajar Hidayat', 'Tahsin & Tahfidz', '05 Sep 2026', 'Diterima'],
+    ['Siti Rahma', "Kajian Qur'ani", '04 Sep 2026', 'Menunggu'],
+    ['Dimas Pratama', 'Tahsin & Tahfidz', '03 Sep 2026', 'Diterima'],
+  ],
+  activities: [
+    ['Setoran Hafalan', '07 Sep · 16.00', '28 peserta', 'Terjadwal'],
+    ["Kelas Qur'an Anak", '10 Sep · 15.30', '31 peserta', 'Terjadwal'],
+    ["Kajian Qur'ani", '14 Sep · 19.30', '55 peserta', 'Terjadwal'],
+  ],
+  participants: [
+    ['Ahmad Rizky', 'Tahsin & Tahfidz', 'Bergabung 2026', 'Aktif'],
+    ['Nabila Aulia', "Kelas Qur'an Anak", 'Bergabung 2025', 'Aktif'],
+    ['Fajar Hidayat', 'Tahsin & Tahfidz', 'Bergabung 2026', 'Aktif'],
+    ['Siti Rahma', "Kajian Qur'ani", 'Bergabung 2025', 'Aktif'],
+  ],
 };
-const dashboard=document.querySelector('#admin-dashboard'), table=document.querySelector('#admin-table-view'), modal=document.querySelector('#admin-unit-modal');
-function showView(key){if(key==='dashboard'){table.hidden=true;dashboard.hidden=false;return}dashboard.hidden=true;table.hidden=false;table.innerHTML=views[key]?.html||'';bindViewButtons();}
-function bindViewButtons(){document.querySelectorAll('[data-view-target]').forEach(b=>b.onclick=()=>showView(b.dataset.viewTarget));document.querySelectorAll('[data-toast]').forEach(b=>b.onclick=()=>toast(b.dataset.toast));}
-document.querySelectorAll('.admin-nav [data-view]').forEach(b=>b.onclick=()=>{document.querySelectorAll('.admin-nav button').forEach(x=>x.classList.remove('active'));b.classList.add('active');showView(b.dataset.view)});
-bindViewButtons();
-const toastEl=document.querySelector('#toast');let timer;function toast(m){toastEl.textContent=m;toastEl.classList.add('show');clearTimeout(timer);timer=setTimeout(()=>toastEl.classList.remove('show'),2200)}
-document.querySelector('#admin-unit-switcher')?.addEventListener('click',()=>modal.hidden=false);document.querySelector('#admin-unit-close')?.addEventListener('click',()=>modal.hidden=true);modal?.addEventListener('click',e=>{if(e.target===modal)modal.hidden=true});
-document.querySelectorAll('#admin-unit-modal .unit-option').forEach(b=>b.addEventListener('click',()=>{const rq=b.dataset.unit==='rq';document.querySelector('#admin-unit-switcher').firstChild.textContent=rq?'RQ Blumbang ':'QIMA Platform ';document.querySelector('#admin-unit-label').textContent=rq?"Rumah Qur'an Blumbang":'QIMA Platform';document.querySelectorAll('#admin-unit-modal .unit-option').forEach(x=>x.classList.remove('active'));b.classList.add('active');modal.hidden=true;toast('Unit context berubah: '+(rq?'RQ Blumbang':'QIMA Platform'))}));
-document.querySelector('#admin-menu')?.addEventListener('click',()=>toast('Sidebar mobile demo aktif.'));
+
+const viewConfig = {
+  programs: {
+    eyebrow: 'PROGRAM MANAGEMENT',
+    title: 'Program',
+    description: 'Pantau program pembelajaran pada unit aktif.',
+    action: '+ Program Baru',
+    toast: 'Form Program Baru tersedia setelah integrasi production.',
+    columns: ['Program', 'Peserta', 'Jadwal', 'Status'],
+  },
+  registrations: {
+    eyebrow: 'REGISTRATION INBOX',
+    title: 'Pendaftaran',
+    description: 'Tinjau calon peserta dari pengalaman public.',
+    action: 'Filter',
+    toast: 'Filter pendaftaran aktif pada versi production.',
+    columns: ['Nama', 'Program', 'Tanggal', 'Status'],
+  },
+  activities: {
+    eyebrow: 'ACTIVITY MANAGEMENT',
+    title: 'Aktivitas',
+    description: 'Lihat agenda unit yang akan datang.',
+    action: '+ Aktivitas',
+    toast: 'Form Aktivitas tersedia setelah integrasi production.',
+    columns: ['Agenda', 'Waktu', 'Peserta', 'Status'],
+  },
+  participants: {
+    eyebrow: 'PARTICIPANT DIRECTORY',
+    title: 'Peserta',
+    description: 'Direktori peserta aktif pada unit demo.',
+    action: '+ Peserta',
+    toast: 'Penambahan peserta tersedia setelah integrasi production.',
+    columns: ['Nama', 'Program', 'Keaktifan', 'Status'],
+  },
+};
+
+const dashboard = document.querySelector('#admin-dashboard');
+const tableView = document.querySelector('#admin-table-view');
+const unitModal = document.querySelector('#admin-unit-modal');
+const unitSwitcher = document.querySelector('#admin-unit-switcher');
+const toastElement = document.querySelector('#toast');
+const sidebar = document.querySelector('#admin-sidebar');
+const menuButton = document.querySelector('#admin-menu');
+const sidebarScrim = document.querySelector('#sidebar-scrim');
+let toastTimer;
+let lastFocusedElement;
+
+function getStoredUnit() {
+  try {
+    return sessionStorage.getItem('qima-demo-unit');
+  } catch {
+    return null;
+  }
+}
+
+function storeUnit(key) {
+  try {
+    sessionStorage.setItem('qima-demo-unit', key);
+  } catch {
+    // The demo remains usable when browser storage is unavailable.
+  }
+}
+
+function trapDialogFocus(event, container) {
+  if (event.key !== 'Tab' || !container || container.hidden) return;
+  const focusable = [...container.querySelectorAll('button:not([disabled]), a[href], input:not([disabled]), [tabindex]:not([tabindex="-1"])')]
+    .filter((element) => !element.hidden && element.getClientRects().length > 0);
+  if (!focusable.length) return;
+  const first = focusable[0];
+  const last = focusable[focusable.length - 1];
+  if (event.shiftKey && document.activeElement === first) {
+    event.preventDefault();
+    last.focus();
+  } else if (!event.shiftKey && document.activeElement === last) {
+    event.preventDefault();
+    first.focus();
+  }
+}
+
+function showToast(message) {
+  if (!toastElement) return;
+  toastElement.textContent = message;
+  toastElement.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toastElement.classList.remove('show'), 2600);
+}
+
+function statusClass(value) {
+  if (value === 'Menunggu') return 'pending';
+  if (value === 'Diterima' || value === 'Aktif' || value === 'Terjadwal') return 'approved';
+  return 'neutral';
+}
+
+function renderView(key) {
+  if (key === 'dashboard') {
+    tableView.hidden = true;
+    dashboard.hidden = false;
+    document.title = 'QIMA — Admin Demo';
+    closeSidebar();
+    return;
+  }
+
+  const config = viewConfig[key];
+  if (!config) return;
+  dashboard.hidden = true;
+  tableView.hidden = false;
+  document.title = `${config.title} · QIMA Admin Demo`;
+  tableView.innerHTML = `
+    <div class="admin-heading"><div><span class="eyebrow">${config.eyebrow}</span><h1>${config.title}</h1><p>${config.description}</p></div><button class="admin-primary" type="button" data-toast="${config.toast}">${config.action}</button></div>
+    <div class="list-toolbar"><label for="table-search">Cari ${config.title.toLowerCase()}<input id="table-search" type="search" placeholder="Ketik kata kunci…"></label><span>${demoRows[key].length} data demo</span></div>
+    <div class="admin-panel table-panel" role="region" aria-label="Daftar ${config.title}" tabindex="0">
+      <div role="table" aria-label="Data ${config.title}">
+        <div class="table-row table-head" role="row">${config.columns.map((column) => `<span role="columnheader">${column}</span>`).join('')}</div>
+        <div id="table-body" role="rowgroup">${renderRows(demoRows[key])}</div>
+      </div>
+      <div class="empty-state" id="table-empty" hidden><span aria-hidden="true">⌕</span><h2>Tidak ada hasil</h2><p>Coba kata kunci lain pada data demo ini.</p></div>
+    </div>`;
+
+  bindDynamicButtons();
+  const search = document.querySelector('#table-search');
+  search?.addEventListener('input', () => {
+    const query = search.value.toLowerCase().trim();
+    const filtered = demoRows[key].filter((row) => row.join(' ').toLowerCase().includes(query));
+    document.querySelector('#table-body').innerHTML = renderRows(filtered);
+    document.querySelector('#table-empty').hidden = filtered.length > 0;
+  });
+  search?.focus();
+  closeSidebar();
+}
+
+function renderRows(rows) {
+  return rows.map((row) => `<div class="table-row" role="row"><strong role="cell">${row[0]}</strong><span role="cell">${row[1]}</span><span role="cell">${row[2]}</span><em role="cell" class="status ${statusClass(row[3])}">${row[3]}</em></div>`).join('');
+}
+
+function setActiveNavigation(key) {
+  document.querySelectorAll('.admin-nav [data-view]').forEach((button) => {
+    const active = button.dataset.view === key;
+    button.classList.toggle('active', active);
+    if (active) button.setAttribute('aria-current', 'page');
+    else button.removeAttribute('aria-current');
+  });
+}
+
+function showView(key) {
+  setActiveNavigation(key);
+  renderView(key);
+}
+
+function bindDynamicButtons() {
+  document.querySelectorAll('[data-view-target]').forEach((button) => {
+    button.onclick = () => showView(button.dataset.viewTarget);
+  });
+  document.querySelectorAll('[data-toast]').forEach((button) => {
+    button.onclick = () => showToast(button.dataset.toast);
+  });
+}
+
+function setUnitModal(open, trigger) {
+  if (!unitModal) return;
+  if (open) {
+    lastFocusedElement = trigger || document.activeElement;
+    unitModal.hidden = false;
+    document.body.classList.add('flow-open');
+    unitSwitcher?.setAttribute('aria-expanded', 'true');
+    requestAnimationFrame(() => unitModal.querySelector('button')?.focus());
+  } else {
+    unitModal.hidden = true;
+    document.body.classList.remove('flow-open');
+    unitSwitcher?.setAttribute('aria-expanded', 'false');
+    lastFocusedElement?.focus?.();
+  }
+}
+
+function updateUnit(key, announce = true) {
+  const qima = key === 'qima';
+  storeUnit(key);
+  const shortName = qima ? 'QIMA Platform' : 'RQ Blumbang';
+  const fullName = qima ? 'QIMA Platform' : "Rumah Qur'an Blumbang";
+  document.querySelectorAll('[data-admin-unit-short]').forEach((element) => { element.textContent = shortName; });
+  document.querySelectorAll('[data-admin-unit-name]').forEach((element) => { element.textContent = fullName; });
+  document.querySelector('#admin-unit-label').textContent = fullName;
+  document.querySelectorAll('#admin-unit-modal .unit-option').forEach((button) => {
+    const active = button.dataset.unit === key;
+    button.classList.toggle('active', active);
+    button.setAttribute('aria-pressed', String(active));
+    const indicator = button.querySelector('i');
+    if (indicator) indicator.textContent = active ? '✓' : '○';
+  });
+  if (!unitModal?.hidden) setUnitModal(false);
+  if (announce) showToast(`Konteks berubah ke ${shortName}. Data tetap berupa simulasi.`);
+}
+
+function openSidebar() {
+  document.body.classList.add('admin-nav-open');
+  sidebarScrim.hidden = false;
+  menuButton.setAttribute('aria-expanded', 'true');
+  menuButton.setAttribute('aria-label', 'Tutup navigasi admin');
+  sidebar.querySelector('button, a')?.focus();
+}
+
+function closeSidebar() {
+  document.body.classList.remove('admin-nav-open');
+  sidebarScrim.hidden = true;
+  menuButton?.setAttribute('aria-expanded', 'false');
+  menuButton?.setAttribute('aria-label', 'Buka navigasi admin');
+}
+
+document.querySelectorAll('.admin-nav [data-view]').forEach((button) => {
+  button.addEventListener('click', () => showView(button.dataset.view));
+});
+bindDynamicButtons();
+updateUnit(getStoredUnit() === 'qima' ? 'qima' : 'rq', false);
+
+unitSwitcher?.addEventListener('click', () => setUnitModal(true, unitSwitcher));
+document.querySelector('#context-switch-action')?.addEventListener('click', () => setUnitModal(true, document.querySelector('#context-switch-action')));
+document.querySelector('#admin-unit-close')?.addEventListener('click', () => setUnitModal(false));
+unitModal?.addEventListener('click', (event) => { if (event.target === unitModal) setUnitModal(false); });
+document.querySelectorAll('#admin-unit-modal .unit-option').forEach((button) => button.addEventListener('click', () => updateUnit(button.dataset.unit)));
+
+menuButton?.addEventListener('click', () => {
+  if (document.body.classList.contains('admin-nav-open')) closeSidebar();
+  else openSidebar();
+});
+sidebarScrim?.addEventListener('click', closeSidebar);
+
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Tab' && unitModal && !unitModal.hidden) {
+    trapDialogFocus(event, unitModal);
+    return;
+  }
+  if (event.key !== 'Escape') return;
+  if (unitModal && !unitModal.hidden) setUnitModal(false);
+  else if (document.body.classList.contains('admin-nav-open')) {
+    closeSidebar();
+    menuButton?.focus();
+  }
+});

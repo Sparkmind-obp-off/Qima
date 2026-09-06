@@ -12,6 +12,7 @@ import { renderPrototypeAdminShell } from './prototype-admin-shell';
 import { renderPrototypeAdminLoginShell } from './prototype-admin-login-shell';
 
 export const web = new Hono<{ Bindings: QimaBindings }>();
+web.get('/favicon.ico', (c) => c.body(null, 204));
 web.get('/demo', (c) => c.html(renderPrototypeShell()));
 web.get('/demo/admin/login', (c) => c.html(renderPrototypeAdminLoginShell()));
 web.get('/demo/admin', (c) => c.html(renderPrototypeAdminShell()));
