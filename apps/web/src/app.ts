@@ -9,9 +9,11 @@ import { renderProgramShell } from './program-shell';
 import { renderBootstrapShell } from './shell';
 import { renderPrototypeShell } from './prototype-shell';
 import { renderPrototypeAdminShell } from './prototype-admin-shell';
+import { renderPrototypeAdminLoginShell } from './prototype-admin-login-shell';
 
 export const web = new Hono<{ Bindings: QimaBindings }>();
 web.get('/demo', (c) => c.html(renderPrototypeShell()));
+web.get('/demo/admin/login', (c) => c.html(renderPrototypeAdminLoginShell()));
 web.get('/demo/admin', (c) => c.html(renderPrototypeAdminShell()));
 web.get('/programs', (c) => c.html(renderProgramShell({ mode: 'list' })));
 web.get('/programs/new', (c) => c.html(renderProgramShell({ mode: 'create' })));
