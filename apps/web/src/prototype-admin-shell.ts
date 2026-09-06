@@ -3,6 +3,7 @@ export function renderPrototypeAdminShell() {
 <html lang="id">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>QIMA Admin Demo</title><link rel="stylesheet" href="/static/prototype.css"></head>
 <body class="admin-demo">
+<div class="demo-mode-bar demo-mode-bar-admin"><span>●</span><strong>ADMIN DEMO</strong><span>Simulasi operasional · tidak menyimpan data production</span><a href="/demo">← Kembali Public</a></div>
 <div class="admin-layout">
 <aside class="admin-sidebar">
   <a class="brand" href="/demo"><span class="brand-mark">Q</span><span><strong>QIMA</strong><small>Admin Demo</small></span></a>
