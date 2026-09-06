@@ -483,22 +483,21 @@ dropped during bundling) passed every source test while failing at runtime.
 - **Entry point**: `src/index.ts` (declared explicitly in `vite.config.ts`;
   the plugin default `src/index.tsx` does not exist in this repository)
 - **Tech stack**: Hono + TypeScript + Vite + Cloudflare D1
-- **Runtime verification**: `/`, `/programs`, `/api/v1/health`, `/api/v1/meta`,
-  `/api/v1/health/database`, authentication routes, protected organization/unit
-  and Program routes, static assets, and the later-phase 404 boundary.
-- **Status**: Active at https://qima.pages.dev. Phase 0–5 are verified locally;
-  production health, database connectivity, Phase 5 metadata/UI, the protected
-  Activity authentication boundary, and post-Phase-5 routes were verified after deployment.
-- **Production data**: D1 migrations `0000`–`0007` are applied to
-  `qima-production`; deterministic role/permission seeds, including Program and
-  Activity permissions with their scoped role grants, are applied.
-- **Last deployed**: 2026-09-04 via the BYOK Cloudflare Pages workflow
-  (`https://caf22bc0.qima.pages.dev`, promoted at `https://qima.pages.dev`).
+- **Runtime verification**: `/`, `/demo`, `/demo/admin/login`, `/demo/admin`,
+  `/programs`, `/api/v1/health`, `/api/v1/meta`, prototype static assets, and
+  the later-phase 404 boundary.
+- **Status**: Active at https://qima.pages.dev. Production Phase 0–6 foundations
+  and the P1 meeting demo quality gates are verified locally; the public and admin
+  demo routes were smoke-tested after deployment with no browser console errors.
+- **Production data**: D1 migrations `0000`–`0008` are applied to
+  `qima-production`; deterministic role/permission seeds include Program,
+  Activity, and Participant permissions with their scoped role grants.
+- **Last deployed**: 2026-09-06 via the BYOK Cloudflare Pages workflow
+  (`https://570d4df7.qima.pages.dev`, promoted at `https://qima.pages.dev`).
 
 Deployment uses the account-owned `qima` Pages project and `qima-production`
 D1 database. The committed `database_id` remains a safe placeholder; the account
-owner supplies the real binding and any secret only during deployment. The Phase 5
-production deployment is linked to Git commit `c07103e`.
+owner supplies the real binding and any secret only during deployment. The P1 demo deployment is linked to Git commit `a8a70a8`.
 
 ## Not Yet Implemented
 
@@ -518,5 +517,7 @@ production deployment is linked to Git commit `c07103e`.
 
 ## Next Recommended Step
 
-Phase 5 is complete. Keep Phase 6 Participant unimplemented until its execution cycle
-is explicitly authorized; preserve the verified Program → Activity scope boundary.
+Run stakeholder meeting validation against DOC 12, capture accepted feedback, and freeze
+the validated prototype direction. After that gate, continue with the planned production
+Registration vertical slice while preserving the verified Phase 2–6 foundations and the
+prototype/production boundary.
