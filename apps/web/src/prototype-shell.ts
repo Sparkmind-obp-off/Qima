@@ -1,5 +1,6 @@
 export function renderPrototypeShell(): string {
   return `<!doctype html><html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>QIMA — Platform Pendidikan Al-Qur'an</title><link rel="stylesheet" href="/static/prototype.css"><link rel="stylesheet" href="/static/prototype-flow.css"></head><body>
+<div class="demo-mode-bar"><span>●</span><strong>DEMO MODE</strong><span>Prototype meeting · data tidak tersimpan ke production</span><a href="/demo/admin/login">Buka Admin Demo →</a></div>
 <div class="prototype-app">
 <header class="site-header"><a class="logo" href="#home"><span class="logo-mark">ق</span>QIMA</a><nav><a href="#programs">Program</a><a href="#activities">Aktivitas</a><a href="#about">Tentang</a><a href="#contact">Kontak</a></nav><div class="header-actions"><button class="unit-pill" id="unit-switcher"><span class="live-dot"></span><span id="unit-label">RQ Blumbang</span>⌄</button><a class="btn btn-primary btn-small" href="#register">Daftar</a></div><button class="menu-button" id="menu-button">☰</button></header>
 <main>
