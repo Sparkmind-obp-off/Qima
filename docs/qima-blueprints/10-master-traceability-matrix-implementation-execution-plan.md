@@ -1,7 +1,7 @@
-QIMA — MASTER TRACEABILITY MATRIX + IMPLEMENTATION EXECUTION PLAN v1.0
+QIMA — MASTER TRACEABILITY MATRIX + IMPLEMENTATION EXECUTION PLAN v1.1
 
-Status: MASTER EXECUTION BASELINE
-Version: 1.0
+Status: MASTER EXECUTION BASELINE — PROTOTYPE-FIRST
+Version: 1.1
 System: QIMA
 Layer: Master Control / Traceability / Implementation / Delivery
 
@@ -35,19 +35,23 @@ QA
    ↓
 DEPLOYMENT
 
-Tujuan dokumen:
+Mulai v1.1, execution strategy resmi menggunakan prototype-first delivery untuk validasi visual, UX, demo journey, dan kesiapan meeting sebelum production integration.
 
-Menghilangkan ambiguity saat development.
-Menjaga traceability antar seluruh layer.
-Menentukan urutan implementasi.
-Menentukan dependency.
-Menentukan acceptance criteria.
-Menjadi dasar task engineering.
-Menjadi kontrol agar implementation tidak keluar dari MVP scope.
+Prototype-first tidak menggantikan production architecture. Prototype adalah implementation mode sementara yang menggunakan Mock Data + Local State / Simulated Interaction dan tetap mengikuti kontrak platform.
+
+Tujuan dokumen:
+- Menghilangkan ambiguity saat development.
+- Menjaga traceability antar seluruh layer.
+- Menentukan urutan implementasi.
+- Menentukan dependency.
+- Menentukan acceptance criteria.
+- Menjadi dasar task engineering.
+- Menjadi kontrol agar implementation tidak keluar dari MVP scope.
+- Menjaga agar pekerjaan backend yang telah VERIFIED tidak diulang.
+
 2. SOURCE-OF-TRUTH HIERARCHY
 
 Urutan authority:
-
 1. Product Vision
 2. MVP Scope & Boundary
 3. Module / User Journey Contract
@@ -56,11 +60,11 @@ Urutan authority:
 6. UX/UI Specification
 7. Implementation Contract
 8. Testing / QA / Delivery Blueprint
-9. This Master Execution Plan
-10. Code
+9. DOC 11 — Frontend Prototype & Demo Execution Blueprint
+10. This Master Execution Plan
+11. Code
 
 Jika terdapat konflik:
-
 STOP
  ↓
 Identify source
@@ -72,6 +76,7 @@ Update affected contract
 Continue implementation
 
 Code tidak boleh menjadi alasan untuk mempertahankan architecture yang salah.
+DOC 11 hanya mengatur prototype UX/UI, demo, mock data, prototype deployment, dan handoff; DOC 01–09 tetap menjadi production contract.
 
 3. MASTER TRACEABILITY MODEL
 
@@ -98,42 +103,50 @@ Implementation Task
 Test
       ↓
 Release Gate
+
+Prototype path diperbolehkan sebagai:
+Requirement → Capability → Module → Screen → Mock Data → Simulated Interaction → Prototype QA → Demo Gate
+
+Prototype path tidak menghapus production traceability.
+
 4. REQUIREMENT ID CONVENTION
 
-Canonical prefixes:
+PRD-xxx Product
+SCP-xxx Scope
+AUTH-xxx Authentication
+ORG-xxx Organization
+UNIT-xxx Unit
+USR-xxx User
+ACC-xxx Access
+PROG-xxx Program
+ACT-xxx Activity
+PART-xxx Participant
+REG-xxx Registration
+ATT-xxx Attendance
+CONT-xxx Content
+RPT-xxx Report
+AUD-xxx Audit
+SET-xxx Settings
+PUB-xxx Public Experience
+SEC-xxx Security
+NFR-xxx Non-functional
 
-PRD-xxx       Product
-SCP-xxx       Scope
-AUTH-xxx      Authentication
-ORG-xxx       Organization
-UNIT-xxx      Unit
-USR-xxx       User
-ACC-xxx       Access
-PROG-xxx      Program
-ACT-xxx       Activity
-PART-xxx      Participant
-REG-xxx       Registration
-ATT-xxx       Attendance
-CONT-xxx      Content
-RPT-xxx       Report
-AUD-xxx       Audit
-SET-xxx       Settings
-PUB-xxx       Public Experience
-SEC-xxx       Security
-NFR-xxx       Non-functional
 5. PRIORITY SYSTEM
+
 P0 = MVP Critical
 P1 = Important
 P2 = Secondary
 P3 = Future / Optional
 
-Implementation order:
-
-P0 → P1 → P2 → P3
-
 P2/P3 tidak boleh mengganggu completion P0.
 
+Prototype priority:
+P0 prototype = meeting-critical screens and demo journey.
+P1 prototype = supporting screens.
+P2/P3 prototype = defer.
+
 6. MASTER CAPABILITY MAP
+
 QIMA
 │
 ├── Identity & Access
@@ -155,15 +168,13 @@ QIMA
 │   └── Attendance
 │
 ├── Content
-│
 ├── Reporting
-│
 ├── Audit
-│
 ├── Settings
-│
 └── Public Experience
+
 7. MASTER TRACEABILITY MATRIX
+
 ID	Capability	Module	Domain	DB	API	UI	Priority
 AUTH-001	Login	Auth	User/Session	users/sessions	/auth/*	Login	P0
 ORG-001	Organization	Organizations	Organization	organizations	/organizations	Org Admin	P0
@@ -177,347 +188,120 @@ ATT-001	Attendance	Attendance	Attendance	attendance	/attendance	Attendance UI	P0
 CONT-001	Content	Content	Content	content	/content	Content UI	P1
 RPT-001	Reporting	Reports	Report	derived/query	/reports	Reports	P1
 AUD-001	Audit	Audit	AuditEvent	audit_logs	/audit	Audit UI	P1
-SET-001	Settings	Settings	Configuration	settings	/settings	Settings	P1
+SET-001	Settings	Settings	Configuration	settings	/settings	Settings UI	P1
 PUB-001	Public Experience	Public	PublicResource	derived	/public/*	Public UI	P1
 SEC-001	Scope Isolation	Shared/Auth	Scope	all scoped tables	all scoped APIs	—	P0
+
 8. FOUNDATION TRACEABILITY
+
 FND-001 — Repository
-Requirement
-→ Repository exists
-→ apps/web
-→ apps/api
-→ packages
-→ database
-→ tests
-→ docs
+Repository → apps/web → apps/api → packages → database → tests → docs.
+Acceptance: repository builds successfully.
 
-Acceptance:
-
-Repository builds successfully.
 FND-002 — Configuration
-Requirement
-→ Environment Configuration
-→ config module
-→ .env.example
+Environment Configuration → config module → .env.example.
+Acceptance: required configuration is validated at startup.
 
-Acceptance:
-
-Application validates required configuration at startup.
 FND-003 — Database
-Requirement
-→ Database foundation
-→ migration system
-→ schema
+Database foundation → migration system → schema.
+Acceptance: fresh database can be created from migrations.
 
-Acceptance:
-
-Fresh database can be created from migrations.
 FND-004 — Error Handling
-Requirement
-→ Shared Error Contract
-→ API Error Handler
-→ Frontend Error Mapping
+Shared Error Contract → API Error Handler → Frontend Error Mapping.
+Acceptance: no raw internal exception is exposed to users.
 
-Acceptance:
-
-No raw internal exception is exposed to users.
 9. AUTHENTICATION TRACEABILITY
+
 AUTH-001
-Login
- ↓
-User
- ↓
-Session
- ↓
-Authentication API
- ↓
-Login Screen
- ↓
-Auth Test
+Login → User → Session → Authentication API → Login Screen → Auth Test.
+Acceptance: valid credentials authenticate; invalid credentials fail; protected resources reject anonymous access.
 
-Acceptance:
-
-Valid credentials authenticate.
-Invalid credentials fail.
-Protected resources reject anonymous access.
 10. ORGANIZATION TRACEABILITY
+
 ORG-001
-Organization
- ↓
-Organization Entity
- ↓
-organizations
- ↓
-Organization API
- ↓
-Organization Screen
- ↓
-Authorization Test
+Organization → Organization Entity → organizations → Organization API → Organization Screen → Authorization Test.
+Acceptance: organization is uniquely identifiable and ownership is preserved.
 
-Acceptance:
-
-Organization is uniquely identifiable.
-Organization ownership is preserved.
 11. UNIT TRACEABILITY
+
 UNIT-001
-Unit
- ↓
-Unit Entity
- ↓
-units
- ↓
-Unit API
- ↓
-Unit Management UI
- ↓
-Scope Test
+Unit → Unit Entity → units → Unit API → Unit Management UI → Scope Test.
+Acceptance: unit belongs to correct organization.
 
-Acceptance:
-
-Unit belongs to correct organization.
 12. ACCESS TRACEABILITY
+
 ACC-001
-User
- ↓
-Role
- ↓
-Permission
- ↓
-Scope
- ↓
-Authorization Middleware
- ↓
-Protected API
- ↓
-Access UI
- ↓
-Authorization Tests
+User → Role → Permission → Scope → Authorization Middleware → Protected API → Access UI → Authorization Tests.
+Acceptance: role permissions are enforced server-side.
 
-Acceptance:
-
-Role permissions are enforced server-side.
 13. PROGRAM TRACEABILITY
+
 PROG-001
-Program
- ↓
-Program Entity
- ↓
-programs
- ↓
-ProgramRepository
- ↓
-CreateProgram
- ↓
-POST /api/v1/programs
- ↓
-Program Form
- ↓
-Program Test
+Program → Program Entity → programs → ProgramRepository → CreateProgram → POST /api/v1/programs → Program Form → Program Test.
+Acceptance: authorized user can create program within authorized unit scope.
 
-Acceptance:
-
-Authorized user can create program
-within authorized unit scope.
 14. ACTIVITY TRACEABILITY
+
 ACT-001
-Activity
- ↓
-Activity Entity
- ↓
-activities
- ↓
-ActivityRepository
- ↓
-CreateActivity
- ↓
-POST /api/v1/activities
- ↓
-Activity UI
- ↓
-Activity Test
+Activity → Activity Entity → activities → ActivityRepository → CreateActivity → POST /api/v1/activities → Activity UI → Activity Test.
+Acceptance: activity cannot belong to an unauthorized unit.
 
-Acceptance:
-
-Activity cannot belong to an unauthorized unit.
 15. PARTICIPANT TRACEABILITY
+
 PART-001
-Participant
- ↓
-Participant Entity
- ↓
-participants
- ↓
-ParticipantRepository
- ↓
-CreateParticipant
- ↓
-POST /api/v1/participants
- ↓
-Participant UI
- ↓
-Participant Test
+Participant → Participant Entity → participants → ParticipantRepository → CreateParticipant → POST /api/v1/participants → Participant UI → Participant Test.
+Acceptance: participant remains scoped to its authorized unit.
 
-Acceptance:
-
-Participant remains scoped to its authorized unit.
 16. REGISTRATION TRACEABILITY
+
 REG-001
-Registration
- ↓
-Registration Entity
- ↓
-registrations
- ↓
-RegistrationRepository
- ↓
-CreateRegistration
- ↓
-POST /api/v1/registrations
- ↓
-Registration UI
- ↓
-Registration Integration Test
+Registration → Registration Entity → registrations → RegistrationRepository → CreateRegistration → POST /api/v1/registrations → Registration UI → Registration Integration Test.
+Critical invariant: Participant Unit = Program Unit. Otherwise REJECT.
 
-Critical invariant:
-
-Participant Unit
-      =
-Program Unit
-
-Otherwise:
-
-REJECT
 17. ATTENDANCE TRACEABILITY
+
 ATT-001
-Attendance
- ↓
-Attendance Entity
- ↓
-attendance
- ↓
-AttendanceRepository
- ↓
-RecordAttendance
- ↓
-POST /api/v1/attendance
- ↓
-Attendance UI
- ↓
-Attendance E2E
-
-Critical invariant:
-
-Participant
-+
-Activity
-+
-Unit
-
-must be compatible.
+Attendance → Attendance Entity → attendance → AttendanceRepository → RecordAttendance → POST /api/v1/attendance → Attendance UI → Attendance E2E.
+Critical invariant: Participant + Activity + Unit must be compatible.
 
 18. CONTENT TRACEABILITY
-CONT-001
-Content
- ↓
-Content Entity
- ↓
-content
- ↓
-ContentRepository
- ↓
-Create / Publish Content
- ↓
-Content API
- ↓
-Content Management UI
- ↓
-Content Test
 
+CONT-001
+Content → Content Entity → content → ContentRepository → Create / Publish Content → Content API → Content Management UI → Content Test.
 Publishing is an audited mutation.
 
 19. REPORTING TRACEABILITY
+
 RPT-001
-Operational Data
- ↓
-Report Query
- ↓
-Report API
- ↓
-Report UI
- ↓
-Report Test
-
-Reports must respect scope.
-
-A Unit A user must never receive Unit B report data.
+Operational Data → Report Query → Report API → Report UI → Report Test.
+Reports must respect scope. A Unit A user must never receive Unit B report data.
 
 20. AUDIT TRACEABILITY
-AUD-001
-Mutation
- ↓
-Audit Event
- ↓
-audit_logs
- ↓
-Audit API
- ↓
-Audit UI
- ↓
-Audit Test
 
+AUD-001
+Mutation → Audit Event → audit_logs → Audit API → Audit UI → Audit Test.
 Critical mutations must be auditable.
 
 21. SECURITY TRACEABILITY
+
 SEC-001 — Organization Isolation
-Organization Context
- ↓
-Authorization
- ↓
-Repository Scope
- ↓
-Database Query
- ↓
-API Response
+Organization Context → Authorization → Repository Scope → Database Query → API Response.
+
 SEC-002 — Unit Isolation
-Unit Context
- ↓
-Authorization
- ↓
-Scoped Query
- ↓
-Result
+Unit Context → Authorization → Scoped Query → Result.
+
 SEC-003 — IDOR Protection
-Direct Resource ID
- ↓
-Scope Check
- ↓
-Authorized?
- ├── YES → Continue
- └── NO → Reject
+Direct Resource ID → Scope Check → Authorized? YES → Continue / NO → Reject.
+
 22. NON-FUNCTIONAL TRACEABILITY
-NFR-001 — Security
-Authentication
-Authorization
-Scope Isolation
-Input Validation
-Secret Protection
-NFR-002 — Reliability
-Transaction Integrity
-Error Handling
-Migration Reliability
-Recovery Procedure
-NFR-003 — Performance
-Pagination
-Indexed Queries
-Bounded Payloads
-No obvious N+1 patterns
-NFR-004 — Accessibility
-Keyboard
-Labels
-Focus
-Contrast
-Semantic structure
+
+NFR-001 — Security: Authentication, Authorization, Scope Isolation, Input Validation, Secret Protection.
+NFR-002 — Reliability: Transaction Integrity, Error Handling, Migration Reliability, Recovery Procedure.
+NFR-003 — Performance: Pagination, Indexed Queries, Bounded Payloads, no obvious N+1 patterns.
+NFR-004 — Accessibility: Keyboard, Labels, Focus, Contrast, Semantic structure.
+
 23. MASTER DEPENDENCY GRAPH
+
 FOUNDATION
     │
     ├── Database
@@ -551,81 +335,120 @@ ACCESS / SCOPE
              ATTENDANCE
                   ↓
                REPORT
-24. IMPLEMENTATION PHASES
-PHASE 0 — PROJECT BOOTSTRAP
-Objective
 
-Membangun foundation repository.
+24. IMPLEMENTATION PHASES — v1.1 PROTOTYPE-FIRST
+
+IMPORTANT EXECUTION RULE
+
+Mulai v1.1, QIMA tidak lagi memakai urutan production-only sebagai urutan kerja praktis.
+
+Urutan resmi delivery:
+
+P0 — FRONTEND PROTOTYPE
+P1 — DEMO / MEETING VALIDATION
+P2 — BACKEND FOUNDATION / CONTINUATION
+P3 — AUTH + ACCESS CONTINUATION
+P4 — DOMAIN MODULES
+P5 — PRODUCTION INTEGRATION
+P6 — PRODUCTION QA / HARDENING
+P7 — MULTI-DEPLOYMENT
+P8 — SCALE / FUTURE UNITS
+
+Prototype phase berjalan di atas architecture contract yang sudah ada dan tidak menghapus dependency production.
+
+PHASE P0 — FRONTEND PROTOTYPE
+
+Objective:
+Membangun frontend prototype yang visually credible, responsive, dan siap didemokan tanpa menunggu seluruh backend production selesai.
+
+Source:
+DOC 01–10 + DOC 11.
 
 Tasks:
+PT0.01 Prototype foundation and route shell
+PT0.02 Design tokens and reusable primitives
+PT0.03 Public landing / home
+PT0.04 Unit identity / branding configuration
+PT0.05 Program listing
+PT0.06 Program detail
+PT0.07 Activity / events
+PT0.08 Registration mock flow
+PT0.09 Registration success state
+PT0.10 Demo admin login
+PT0.11 Admin dashboard
+PT0.12 Program management demo
+PT0.13 Activity management demo
+PT0.14 Registration management demo
+PT0.15 Unit switcher / unit context demo
+PT0.16 Responsive states
+PT0.17 Loading / empty / error states
+PT0.18 Accessibility baseline
+PT0.19 Controlled motion / parallax where useful
+PT0.20 Mock data contract
 
-T0.01 Initialize repository
-T0.02 Configure package manager
-T0.03 Configure web application
-T0.04 Configure API application
-T0.05 Configure shared packages
-T0.06 Configure lint
-T0.07 Configure formatter
-T0.08 Configure type checking
-T0.09 Configure test framework
-T0.10 Create environment contract
+Prototype mode:
+UI → Mock Data → Local State / Simulated Interaction → Demo Result.
 
 Exit Criteria:
+✓ Critical screens render
+✓ Demo navigation works
+✓ Mock interactions work
+✓ Responsive layout works
+✓ No critical route errors
+✓ No critical console errors
+✓ QIMA and RQ Blumbang identity can be demonstrated
+✓ Prototype remains compatible with production contracts
 
-✓ Repository builds
-✓ Web starts
-✓ API starts
-✓ Tests execute
-PHASE 1 — DATABASE FOUNDATION
+PHASE P1 — DEMO / MEETING VALIDATION
 
-Tasks:
+Objective:
+Validate that the prototype can tell the QIMA platform story end-to-end.
 
-T1.01 Database connection
-T1.02 Migration system
-T1.03 Base schema
-T1.04 Organization schema
-T1.05 Unit schema
-T1.06 User schema
-T1.07 Role schema
-T1.08 Permission schema
-T1.09 Scope relationships
-T1.10 Audit schema
+Canonical demo:
+Open Demo
+ ↓
+QIMA Landing
+ ↓
+Explore RQ Blumbang
+ ↓
+Program
+ ↓
+Program Detail
+ ↓
+Registration Mock
+ ↓
+Registration Success
+ ↓
+Demo Admin Login
+ ↓
+Dashboard
+ ↓
+Programs
+ ↓
+Registrations
+ ↓
+Unit Switcher
+ ↓
+Second Unit / Identity
 
 Exit Criteria:
+✓ Demo can be completed without backend dependency
+✓ Visual hierarchy is credible
+✓ Unit identity switching is understandable
+✓ Core CTA and journey are clear
+✓ Prototype is suitable for stakeholder review
 
-✓ Fresh database migration
-✓ Constraints validated
-✓ Seed works
-PHASE 2 — AUTHENTICATION & ACCESS
+PHASE P2 — BACKEND FOUNDATION / CONTINUATION
 
-Tasks:
+Objective:
+Continue production implementation without restarting verified work.
 
-T2.01 Authentication
-T2.02 Session management
-T2.03 Login API
-T2.04 Logout
-T2.05 User context
-T2.06 Role resolution
-T2.07 Permission resolution
-T2.08 Scope context
-T2.09 Authorization middleware
-T2.10 Access tests
+RULE: VERIFIED WORK IS IMMUTABLE BY DEFAULT.
 
-Verified implementation status (2026-09-04):
+Existing verified Phase 2 and Phase 3 work remains accepted baseline as of 2026-09-04.
+Do not recreate authentication, session, authorization, organization, unit, or scope work merely because prototype delivery happened first.
 
-✓ T2.01 Authentication
-✓ T2.02 Session management
-✓ T2.03 Login API
-✓ T2.04 Logout
-✓ T2.05 User context
-✓ T2.06 Role resolution
-✓ T2.07 Permission resolution
-✓ T2.08 Scope context
-✓ T2.09 Authorization middleware
-✓ T2.10 Access tests
-
-Evidence:
-
+Verified Phase 2 evidence:
 - `packages/domain/src/authorization.ts`
 - `apps/api/src/application/authorization/resolve-authorization-context.ts`
 - `apps/api/src/modules/auth/authorization-middleware.ts`
@@ -633,33 +456,7 @@ Evidence:
 - `tests/unit/phase2-authorization-domain.test.ts`
 - `tests/api/auth-access.test.ts`
 
-Exit Criteria:
-
-✓ Login works
-✓ Protected API works
-✓ Unauthorized access rejected
-PHASE 3 — ORGANIZATION & UNIT
-
-Tasks:
-
-T3.01 Organization CRUD
-T3.02 Unit CRUD
-T3.03 Organization → Unit relationship
-T3.04 Unit scope
-T3.05 Unit authorization
-T3.06 Unit isolation tests
-
-Verified implementation status (2026-09-04):
-
-✓ T3.01 Organization create/read/list/update API and use cases
-✓ T3.02 Unit create/read/list/update API and use cases
-✓ T3.03 Organization → Unit foreign key and immutable ownership boundary
-✓ T3.04 Server-owned organization/unit scope on protected queries
-✓ T3.05 Existing Phase 2 role/permission authorization reused server-side
-✓ T3.06 Cross-organization, cross-unit, IDOR, and regression tests
-
-Evidence:
-
+Verified Phase 3 evidence:
 - `packages/domain/src/organization.ts`
 - `apps/api/src/application/organization/organization-use-cases.ts`
 - `apps/api/src/application/organization/unit-use-cases.ts`
@@ -669,292 +466,139 @@ Evidence:
 - `tests/integration/phase3-organization-unit-repository.test.ts`
 - `tests/api/phase3-organization-unit.test.ts`
 
-Exit Criteria:
+Continuation means:
+1. Verify current code state.
+2. Reuse existing implementation.
+3. Fix only actual gaps/regressions.
+4. Extend from the existing contracts.
+5. Do not duplicate modules or create parallel auth/scope systems.
 
-✓ Organization works
-✓ Unit works
-✓ Isolation works
-PHASE 4 — PROGRAM
+PHASE P3 — AUTH + ACCESS CONTINUATION
 
-Tasks:
+Tasks are only for gaps not already satisfied by verified implementation.
 
-T4.01 Program schema
-T4.02 Program domain
-T4.03 Program repository
-T4.04 CreateProgram
-T4.05 UpdateProgram
-T4.06 ListPrograms
-T4.07 Program API
-T4.08 Program UI
-T4.09 Program tests
-
-Verified implementation status (2026-09-04):
-
-✓ T4.01 Program schema, constraints, indexes, and Unit foreign key
-✓ T4.02 Program domain state and validation invariants
-✓ T4.03 Unit-scoped ProgramRepository persistence operations
-✓ T4.04 CreateProgram with server-authorized organization/unit scope
-✓ T4.05 UpdateProgram with scoped load and IDOR protection
-✓ T4.06 ListPrograms with server-side Unit scope and bounded pagination
-✓ T4.07 Authenticated Program API with role/permission enforcement
-✓ T4.08 Program list, detail, create, and edit UI states
-✓ T4.09 Domain, migration, repository, API, UI, regression, and isolation tests
-
-Evidence:
-
-- `database/migrations/0006_phase4_program_schema.sql`
-- `packages/domain/src/program.ts`
-- `packages/domain/src/repositories.ts`
-- `apps/api/src/infrastructure/database/repositories.ts`
-- `apps/api/src/application/program/program-use-cases.ts`
-- `apps/api/src/modules/program/routes.ts`
-- `apps/web/src/program-shell.ts`
-- `public/static/programs.js`
-- `tests/unit/phase4-program-domain.test.ts`
-- `tests/integration/phase4-program-repository.test.ts`
-- `tests/integration/phase4-program-ui.test.ts`
-- `tests/api/phase4-program.test.ts`
+T3C.01 Verify current authentication baseline
+T3C.02 Verify current session baseline
+T3C.03 Verify role/permission baseline
+T3C.04 Verify organization/unit scope baseline
+T3C.05 Address only discovered gaps
+T3C.06 Regression tests
 
 Exit Criteria:
+✓ Existing Phase 2/3 verified gates remain green
+✓ No duplicate auth/access architecture exists
+✓ New work composes with existing server-side scope enforcement
 
-✓ Program lifecycle works
-✓ Scope enforced
-PHASE 5 — ACTIVITY
+PHASE P4 — DOMAIN MODULES
+
+Continue production vertical slices in dependency order:
+
+PROGRAM
+ACTIVITY
+PARTICIPANT
+REGISTRATION
+ATTENDANCE
+REPORTING
+CONTENT
+AUDIT / SETTINGS
+
+Existing verified Phase 4–6 work must be reused and extended, not recreated.
+
+Verified Phase 4 baseline includes Program schema/domain/repository/use cases/API/UI/tests.
+Verified Phase 5 baseline includes Activity schema/domain/repository/use cases/API/UI/security tests.
+Verified Phase 6 baseline includes Participant schema/domain/repository/use cases/API/UI/security tests.
+
+Production vertical slice rule:
+Domain → Persistence → Use Case → API → UI → Tests.
+
+PHASE P5 — PRODUCTION INTEGRATION
+
+Prototype screens are progressively wired to real APIs.
+
+Mode A:
+UI → Mock Data → Local State / Simulated Interaction.
+
+Mode B:
+UI → API → Application Service → Domain → Data Access → Database.
+
+Migration rule:
+- Keep the existing UI contract where possible.
+- Replace mock adapters with production adapters.
+- Do not move business rules into visual components.
+- Do not let prototype shortcuts become production architecture.
+
+PHASE P6 — PRODUCTION QA / HARDENING
 
 Tasks:
-
-T5.01 Activity schema
-T5.02 Activity domain
-T5.03 Activity repository
-T5.04 Activity use cases
-T5.05 Activity API
-T5.06 Activity UI
-T5.07 Activity tests
-
-Verified implementation status (2026-09-04):
-
-✓ T5.01 Activity schema, constraints, indexes, Unit foreign key, and same-Unit Program integrity
-✓ T5.02 Activity domain lifecycle, UTC schedule, required-field, and update validation
-✓ T5.03 Unit-scoped ActivityRepository create/read/update/list/soft-delete persistence
-✓ T5.04 CreateActivity, UpdateActivity, GetActivity, ListActivities, and DeleteActivity use cases
-✓ T5.05 Authenticated Activity API with role/permission enforcement and bounded filtering/pagination
-✓ T5.06 Activity list, detail, create, and edit UI integrated with Program selection
-✓ T5.07 Domain, migration, repository, API, UI, security, IDOR, and regression tests
-
-Evidence:
-
-- `database/migrations/0007_phase5_activity_schema.sql`
-- `database/seeds/0003_phase5_activity_permissions.sql`
-- `packages/domain/src/activity.ts`
-- `packages/domain/src/repositories.ts`
-- `apps/api/src/infrastructure/database/repositories.ts`
-- `apps/api/src/application/activity/activity-use-cases.ts`
-- `apps/api/src/modules/activity/routes.ts`
-- `apps/web/src/activity-shell.ts`
-- `public/static/activities.js`
-- `tests/unit/phase5-activity-domain.test.ts`
-- `tests/integration/phase5-activity-repository.test.ts`
-- `tests/integration/phase5-activity-ui.test.ts`
-- `tests/api/phase5-activity.test.ts`
-
-Verified quality gates: `npm run verify` — 38 test files / 519 tests passed, including Phase 2–4 regression suites.
+T6.01 Full test suite
+T6.02 Build verification
+T6.03 Security audit
+T6.04 IDOR tests
+T6.05 Cross-unit tests
+T6.06 Cross-organization tests
+T6.07 Input validation audit
+T6.08 Dependency audit
+T6.09 Performance audit
+T6.10 Accessibility audit
+T6.11 Error leakage audit
+T6.12 Prototype-to-production regression
 
 Exit Criteria:
+✓ No unresolved P0 security issue
+✓ No cross-unit data leak
+✓ No cross-organization data leak
+✓ Critical UX journeys work with production APIs
+✓ Prototype behavior has been reconciled with production behavior
 
-✓ Activity works
-✓ Program relationship valid
-✓ Organization and Unit scope enforced server-side
-✓ Known-ID IDOR, scope manipulation, Program manipulation, query tampering, and pagination enumeration blocked
-PHASE 6 — PARTICIPANT
+PHASE P7 — MULTI-DEPLOYMENT
 
-Tasks:
+Architecture rule:
+ONE QIMA REPOSITORY
+        ↓
+SHARED PLATFORM CORE
+        ↓
+MULTIPLE DEPLOYMENTS / DOMAINS / UNIT IDENTITIES
 
-T6.01 Participant schema
-T6.02 Participant domain
-T6.03 Participant repository
-T6.04 Participant use cases
-T6.05 Participant API
-T6.06 Participant UI
-T6.07 Participant tests
+Required production deployment model:
+1. QIMA platform deployment
+2. RQ Blumbang deployment
 
-Verified implementation status (2026-09-04):
+Future units use the same shared repository/core and receive their own configuration/deployment identity.
 
-✓ T6.01 Participant schema, constraints, indexes, and Unit foreign key
-✓ T6.02 Participant domain validation, normalization, and lifecycle status
-✓ T6.03 Unit-scoped ParticipantRepository create/read/update/list persistence
-✓ T6.04 CreateParticipant, GetParticipant, ListParticipants, and UpdateParticipant use cases
-✓ T6.05 Authenticated Participant API with permission enforcement and bounded filtering/pagination
-✓ T6.06 Participant list, detail, create, and edit UI using the established design system
-✓ T6.07 Domain, migration, repository, API, UI, security, IDOR, and regression tests
+There is NO separate codebase fork for RQ Blumbang.
 
-Evidence:
+Each deployment may define:
+- domain
+- UNIT_ID / unit slug
+- organization context
+- logo / favicon
+- colors / typography
+- hero / imagery
+- content
+- contact information
+- enabled capabilities
 
-- `database/migrations/0008_phase6_participant_schema.sql`
-- `database/seeds/0004_phase6_participant_permissions.sql`
-- `packages/domain/src/participant.ts`
-- `packages/domain/src/repositories.ts`
-- `apps/api/src/infrastructure/database/repositories.ts`
-- `apps/api/src/application/participant/participant-use-cases.ts`
-- `apps/api/src/modules/participant/routes.ts`
-- `apps/web/src/participant-shell.ts`
-- `public/static/participants.js`
-- `tests/unit/phase6-participant-domain.test.ts`
-- `tests/integration/phase6-participant-repository.test.ts`
-- `tests/integration/phase6-participant-ui.test.ts`
-- `tests/api/phase6-participant.test.ts`
-
-Verified quality gates: `npm run verify` — 42 test files / 543 tests passed, including Phase 2–5 regression suites.
+Prototype deployment is conceptually separate from production deployments and may exist as a temporary preview environment.
 
 Exit Criteria:
+✓ QIMA deployment works
+✓ RQ Blumbang deployment works
+✓ Both consume the same shared core
+✓ Unit identity is isolated by configuration/context
+✓ No secrets are committed
+✓ Deployment configuration is documented
 
-✓ Participant lifecycle works
-✓ Organization and Unit scope enforced server-side
-✓ Known-ID IDOR, scope manipulation, query tampering, and pagination enumeration blocked
-PHASE 7 — REGISTRATION
+PHASE P8 — SCALE / FUTURE UNITS
 
-Tasks:
-
-T7.01 Registration schema
-T7.02 Registration domain
-T7.03 Registration repository
-T7.04 CreateRegistration
-T7.05 ApproveRegistration
-T7.06 RejectRegistration
-T7.07 Registration API
-T7.08 Registration UI
-T7.09 Cross-unit validation
-T7.10 Integration tests
-
-Exit Criteria:
-
-✓ Registration lifecycle works
-✓ Cross-unit registration rejected
-✓ Audit generated
-PHASE 8 — ATTENDANCE
-
-Tasks:
-
-T8.01 Attendance schema
-T8.02 Attendance domain
-T8.03 Attendance repository
-T8.04 RecordAttendance
-T8.05 UpdateAttendance
-T8.06 Attendance API
-T8.07 Attendance UI
-T8.08 Attendance tests
-T8.09 E2E attendance journey
-
-Exit Criteria:
-
-✓ Attendance works
-✓ Scope works
-✓ E2E passes
-PHASE 9 — REPORTING
-
-Tasks:
-
-T9.01 Report query architecture
-T9.02 Operational summary
-T9.03 Program report
-T9.04 Participant report
-T9.05 Attendance report
-T9.06 Scope filtering
-T9.07 Report API
-T9.08 Report UI
-T9.09 Report tests
-
-Exit Criteria:
-
-✓ Reports are accurate
-✓ Scope enforced
-PHASE 10 — CONTENT
-
-Tasks:
-
-T10.01 Content schema
-T10.02 Content domain
-T10.03 Content repository
-T10.04 Content CRUD
-T10.05 Publishing
-T10.06 Content API
-T10.07 Content UI
-T10.08 Audit
-T10.09 Tests
-
-Exit Criteria:
-
-✓ Content lifecycle works
-✓ Publish action audited
-PHASE 11 — AUDIT & SETTINGS
-
-Tasks:
-
-T11.01 Audit query
-T11.02 Audit UI
-T11.03 Settings schema
-T11.04 Settings API
-T11.05 Settings UI
-T11.06 Authorization
-T11.07 Tests
-PHASE 12 — PUBLIC EXPERIENCE
-
-Tasks:
-
-T12.01 Public home
-T12.02 Public program listing
-T12.03 Program detail
-T12.04 Public content
-T12.05 Registration entry
-T12.06 Responsive behavior
-T12.07 Accessibility
-T12.08 Public E2E
-PHASE 13 — HARDENING
-
-Tasks:
-
-T13.01 Security audit
-T13.02 IDOR tests
-T13.03 Cross-unit tests
-T13.04 Cross-organization tests
-T13.05 Input validation audit
-T13.06 Dependency audit
-T13.07 Performance audit
-T13.08 Accessibility audit
-T13.09 Error leakage audit
-
-Exit Criteria:
-
-No unresolved P0 security issue.
-PHASE 14 — RELEASE CANDIDATE
-
-Tasks:
-
-T14.01 Full test suite
-T14.02 Build verification
-T14.03 Migration verification
-T14.04 Staging deployment
-T14.05 Staging E2E
-T14.06 Smoke test
-T14.07 Release notes
-T14.08 Rollback verification
-PHASE 15 — MVP PRODUCTION
-
-Tasks:
-
-T15.01 Production deployment
-T15.02 Database migration
-T15.03 Smoke test
-T15.04 Auth verification
-T15.05 Critical workflow verification
-T15.06 Monitoring
-
-MVP status:
-
-READY
-
-only after all release gates pass.
+After QIMA + RQ Blumbang are stable:
+- add additional Rumah Qur’an units
+- add pondok deployments where capability contract permits
+- add additional organizations where architecture permits
+- monitor performance and operational cost
+- keep one shared core
 
 25. MASTER TEST MATRIX
+
 Area	Unit	Integration	API	E2E	Security
 Auth	✓	✓	✓	✓	✓
 Organization	✓	✓	✓	✓	✓
@@ -968,9 +612,9 @@ Attendance	✓	✓	✓	✓	✓
 Reports	✓	✓	✓	✓	✓
 Content	✓	✓	✓	✓	✓
 Audit	✓	✓	✓	—	✓
-26. CRITICAL E2E JOURNEY
+Prototype UX	—	—	—	✓	✓
 
-Canonical MVP journey:
+26. CRITICAL PRODUCTION E2E JOURNEY
 
 Login
  ↓
@@ -990,10 +634,10 @@ Record Attendance
  ↓
 View Report
 
-Expected:
+Expected: PASS.
 
-PASS
 27. SECURITY E2E JOURNEY
+
 User A
  ↓
 Unit A
@@ -1004,60 +648,75 @@ Authorization
  ↓
 REJECT
 
-Repeat against:
+Repeat against GET, POST, PATCH, DELETE, SEARCH, REPORT.
 
-GET
-POST
-PATCH
-DELETE
-SEARCH
-REPORT
-28. RELEASE GATES
+28. PROTOTYPE QA GATE
+
+Prototype may be marked DEMO READY only if:
+✓ Critical screens render
+✓ Navigation and CTAs work
+✓ Mock interactions work
+✓ Responsive behavior is verified
+✓ Loading / empty / error states are acceptable
+✓ Visual identity is consistent
+✓ Typography hierarchy is stable
+✓ No critical console errors
+✓ No broken route
+✓ Demo journey is completable
+✓ No secrets are present
+✓ Prototype is clearly isolated from production data paths
+
+29. PRODUCTION RELEASE GATES
+
 Gate G0 — Build
 ✓ Build
 ✓ Typecheck
 ✓ Lint
+
 Gate G1 — Functional
 ✓ P0 features
 ✓ Core journey
 ✓ API contracts
+
 Gate G2 — Security
 ✓ Authentication
 ✓ Authorization
 ✓ IDOR
 ✓ Scope isolation
 ✓ Secret protection
+
 Gate G3 — Data
 ✓ Migration
 ✓ Constraints
 ✓ Transactions
 ✓ Integrity
+
 Gate G4 — UX
 ✓ Loading
 ✓ Empty
 ✓ Error
 ✓ Responsive
 ✓ Accessibility baseline
+
 Gate G5 — Delivery
 ✓ Staging
 ✓ Smoke test
 ✓ Backup
 ✓ Rollback
-29. ABSOLUTE RELEASE BLOCKERS
+
+30. ABSOLUTE RELEASE BLOCKERS
 
 Any of the following blocks release:
+- P0 security vulnerability
+- Cross-unit data leak
+- Cross-organization data leak
+- Authentication bypass
+- Data corruption
+- Broken critical workflow
+- Failed migration
+- Unrecoverable production state
 
-P0 security vulnerability
-Cross-unit data leak
-Cross-organization data leak
-Authentication bypass
-Data corruption
-Broken critical workflow
-Failed migration
-Unrecoverable production state
-30. IMPLEMENTATION BOARD STRUCTURE
-
-Engineering board should use:
+31. IMPLEMENTATION BOARD STRUCTURE
 
 BACKLOG
 READY
@@ -1068,10 +727,10 @@ QA
 STAGING
 DONE
 BLOCKED
-31. TASK FORMAT
+
+32. TASK FORMAT
 
 Every implementation task should contain:
-
 Task ID
 Requirement ID
 Module
@@ -1082,183 +741,109 @@ Acceptance Criteria
 Tests
 Status
 
-Example:
+33. IMPLEMENTATION ORDER RULE
 
-Task:
-T7.04
+Production dependency order remains:
+Contract → Domain → Database → Use Case → API → UI → Tests.
 
-Requirement:
-REG-001
+Prototype delivery is an explicit exception only for presentation/UX validation:
+Contract → UX/UI → Mock Data → Simulated Interaction → Prototype QA.
 
-Module:
-Registrations
+The prototype exception must not invent production APIs, database rules, or domain behavior.
 
-Objective:
-Implement CreateRegistration.
+34. VERTICAL SLICE RULE
 
-Dependencies:
-Participant
-Program
-Scope
+After foundation is ready, production feature should be built as:
+Domain → Persistence → Use Case → API → UI → Tests.
 
-Acceptance:
-Participant and Program must belong
-to compatible scope.
+Prototype may validate the UI before its production slice is complete, but the production slice remains required before release.
 
-Tests:
-Unit
-Integration
-API
-Security
-32. IMPLEMENTATION ORDER RULE
+35. DEFINITION OF READY
 
-Developer harus mengikuti dependency order.
-
-Do not:
-
-Build UI first
-then invent API
-then invent database
-then change domain
-
-Correct:
-
-Contract
- ↓
-Domain
- ↓
-Database
- ↓
-Use Case
- ↓
-API
- ↓
-UI
- ↓
-Tests
-33. VERTICAL SLICE RULE
-
-Setelah foundation siap, feature sebaiknya dibangun secara vertical slice:
-
-Domain
- ↓
-Persistence
- ↓
-Use Case
- ↓
-API
- ↓
-UI
- ↓
-Tests
-
-Contoh:
-
-Program
-
-diselesaikan end-to-end sebelum berpindah ke feature berikutnya jika dependency memungkinkan.
-
-34. DEFINITION OF READY
-
-Task dapat masuk READY jika:
-
+Task can enter READY if:
 ✓ Requirement known
 ✓ Scope known
-✓ Domain known
-✓ API known
-✓ DB impact known
+✓ Domain known or explicitly prototype-only
+✓ API known or prototype adapter explicitly defined
+✓ DB impact known or explicitly none for prototype
 ✓ UI known
 ✓ Permission known
 ✓ Acceptance criteria known
-35. DEFINITION OF DONE
 
-Task masuk DONE jika:
+36. DEFINITION OF DONE
 
+Production task:
 ✓ Code complete
 ✓ Tests pass
 ✓ Authorization verified
 ✓ Scope verified
 ✓ UX states complete
 ✓ Documentation updated
-36. TRACEABILITY COMPLETION RULE
 
-Tidak boleh ada:
+Prototype task:
+✓ Screen complete
+✓ Mock interaction complete
+✓ Responsive
+✓ Visual QA passed
+✓ Demo path works
+✓ No production contract damage
 
-Requirement
+37. TRACEABILITY COMPLETION RULE
 
-yang tidak memiliki:
+Tidak boleh ada requirement yang tidak memiliki Implementation + Test/Prototype QA evidence.
+Tidak boleh ada implementation yang tidak memiliki requirement atau documented technical reason.
 
-Implementation
-+
-Test
+38. ARCHITECTURE DRIFT CONTROL
 
-Dan tidak boleh ada:
+Jika developer ingin menambahkan new module, new database table, new API, new external service, atau new infrastructure yang tidak ada dalam baseline:
 
-Implementation
+Architecture Review Required.
 
-yang tidak memiliki:
+Prototype-only additions must remain clearly marked as prototype-only.
 
-Requirement / documented technical reason
-37. ARCHITECTURE DRIFT CONTROL
+39. MVP BOUNDARY CONTROL
 
-Jika developer ingin menambahkan:
-
-new module
-new database table
-new API
-new external service
-new infrastructure
-
-yang tidak ada dalam baseline:
-
-Architecture Review Required
-38. MVP BOUNDARY CONTROL
-
-Jika sebuah feature tidak dibutuhkan untuk core journey:
-
-Defer
-
-bukan otomatis:
-
-Add to MVP
+Jika sebuah feature tidak dibutuhkan untuk core journey: Defer.
 
 MVP harus tetap:
-
 Small
 Coherent
 Usable
 Testable
 Deployable
-39. CORE MVP DEFINITION
+
+Prototype juga mengikuti batas ini: jangan menambah fitur hanya demi terlihat ramai.
+
+40. CORE MVP DEFINITION
 
 QIMA MVP minimal harus mampu:
-
 Authenticate User
-      ↓
+ ↓
 Resolve Organization
-      ↓
+ ↓
 Resolve Unit / Scope
-      ↓
+ ↓
 Manage Program
-      ↓
+ ↓
 Manage Activity
-      ↓
+ ↓
 Manage Participant
-      ↓
+ ↓
 Manage Registration
-      ↓
+ ↓
 Record Attendance
-      ↓
+ ↓
 View Operational Report
 
-dengan:
-
+Dengan:
 Authorization
 Scope Isolation
 Audit
 Validation
 Testing
-40. FINAL MVP ACCEPTANCE MATRIX
+
+41. FINAL MVP ACCEPTANCE MATRIX
+
 Capability	Implemented	Tested	Scoped	Release
 Authentication	✓	✓	✓	✓
 Organization	✓	✓	✓	✓
@@ -1270,64 +855,42 @@ Participant	✓	✓	✓	✓
 Registration	✓	✓	✓	✓
 Attendance	✓	✓	✓	✓
 Report	✓	✓	✓	✓
-41. FINAL EXECUTION SEQUENCE
 
-QIMA sekarang memiliki execution sequence resmi:
+42. FINAL EXECUTION SEQUENCE — v1.1
 
-01. Bootstrap Repository
-        ↓
-02. Configure Environment
-        ↓
-03. Setup Database
-        ↓
-04. Implement Authentication
-        ↓
-05. Implement Organization
-        ↓
-06. Implement Unit
-        ↓
-07. Implement Roles / Permissions
-        ↓
-08. Implement Scope Isolation
-        ↓
-09. Implement Programs
-        ↓
-10. Implement Activities
-        ↓
-11. Implement Participants
-        ↓
-12. Implement Registrations
-        ↓
-13. Implement Attendance
-        ↓
-14. Implement Reports
-        ↓
-15. Implement Content
-        ↓
-16. Implement Audit / Settings
-        ↓
-17. Implement Public Experience
-        ↓
-18. Security Hardening
-        ↓
-19. Full QA
-        ↓
-20. Staging
-        ↓
-21. Release Candidate
-        ↓
-22. Production
-        ↓
-23. Smoke Test
-        ↓
-24. MVP READY
-42. MASTER CONTROL LOOP
+QIMA delivery now follows:
 
-Selama development:
+01. Preserve existing verified baseline
+        ↓
+02. Build Frontend Prototype
+        ↓
+03. Validate Demo / Meeting Journey
+        ↓
+04. Continue backend from verified Phase 2/3 state
+        ↓
+05. Complete remaining domain vertical slices
+        ↓
+06. Integrate prototype UI with production APIs
+        ↓
+07. Production QA + Security Hardening
+        ↓
+08. QIMA Production Deployment
+        ↓
+09. RQ Blumbang Production Deployment
+        ↓
+10. Multi-unit / Multi-deployment expansion
+        ↓
+11. Scale
+
+The sequence changes delivery priority, not the architecture.
+
+43. MASTER CONTROL LOOP
 
 SELECT TASK
     ↓
 CHECK CONTRACT
+    ↓
+CHECK EXISTING VERIFIED IMPLEMENTATION
     ↓
 IMPLEMENT
     ↓
@@ -1341,24 +904,10 @@ MERGE
     ↓
 NEXT TASK
 
-Jika test gagal:
+If test fails: FIX → RETEST.
+If contract conflict: STOP → ARCHITECTURE DECISION → UPDATE CONTRACT → CONTINUE.
 
-FIX
- ↓
-RETEST
-
-Jika contract conflict:
-
-STOP
- ↓
-ARCHITECTURE DECISION
- ↓
-UPDATE CONTRACT
- ↓
-CONTINUE
-43. MASTER STATUS MODEL
-
-Setiap requirement menggunakan status:
+44. MASTER STATUS MODEL
 
 NOT STARTED
 READY
@@ -1370,19 +919,15 @@ RELEASED
 DEFERRED
 BLOCKED
 
-VERIFIED berarti:
+VERIFIED means implementation + tests + acceptance have been satisfied.
 
-Implementation
-+
-Tests
-+
-Acceptance
+Prototype-specific status:
+PROTOTYPE READY
+DEMO READY
 
-telah terpenuhi.
+Prototype READY does not mean production VERIFIED.
 
-44. FINAL SYSTEM TRACEABILITY
-
-QIMA sekarang dapat ditelusuri:
+45. FINAL SYSTEM TRACEABILITY
 
 BUSINESS GOAL
       ↓
@@ -1415,54 +960,53 @@ TEST
 QA
       ↓
 DEPLOYMENT
-45. FINAL IMPLEMENTATION LAW
+
+Prototype may temporarily stop at:
+REQUIREMENT → CAPABILITY → MODULE → SCREEN → MOCK DATA → PROTOTYPE QA → DEMO.
+
+46. FINAL IMPLEMENTATION LAW
 
 QIMA implementation harus selalu menjawab tiga pertanyaan:
 
 WHAT?
 Requirement apa yang sedang dibangun?
+
 WHERE?
 Module / layer / repository mana yang bertanggung jawab?
+
 PROOF?
-Test apa yang membuktikan bahwa requirement tersebut benar?
+Test atau QA evidence apa yang membuktikan requirement tersebut benar?
 
 Jika salah satu tidak dapat dijawab:
-
 Implementation is NOT READY.
-46. MASTER EXECUTION COMMAND
 
-Mulai dari repository kosong:
+47. MASTER EXECUTION COMMAND
 
-INIT
+PROTOTYPE-FIRST DELIVERY
  ↓
-FOUNDATION
+DEMO VALIDATION
  ↓
-DATABASE
+REUSE VERIFIED FOUNDATION
  ↓
-AUTH
+PRODUCTION CORE OPERATIONS
  ↓
-SCOPE
- ↓
-CORE OPERATIONS
- ↓
-REPORTING
- ↓
-PUBLIC
+PRODUCTION INTEGRATION
  ↓
 HARDENING
  ↓
 QA
  ↓
-STAGING
+QIMA DEPLOYMENT
  ↓
-PRODUCTION
+RQ BLUMBANG DEPLOYMENT
+ ↓
+FUTURE UNIT DEPLOYMENTS
 
-Tidak melompat langsung ke production feature sebelum foundation dan scope security selesai.
+Tidak melompat ke production release sebelum foundation, scope security, QA, dan release gates selesai.
 
-47. QIMA v1.0 COMPLETION CRITERIA
+48. QIMA v1.1 COMPLETION CRITERIA
 
 QIMA MVP dinyatakan selesai apabila:
-
 ✓ Product contract satisfied
 ✓ MVP scope satisfied
 ✓ Core modules implemented
@@ -1478,4 +1022,51 @@ QIMA MVP dinyatakan selesai apabila:
 ✓ Unit tests pass
 ✓ Integration tests pass
 ✓ API tests pass
-✓ Cri
+✓ E2E critical journey passes
+✓ Production QA passes
+✓ QIMA deployment passes
+✓ RQ Blumbang deployment passes
+✓ No unresolved P0 security issue
+
+49. NON-NEGOTIABLE EXECUTION RULES
+
+1. Prototype-first is a delivery strategy, not a replacement architecture.
+2. DOC 01–09 remain the production source of truth.
+3. DOC 11 governs frontend prototype/demo execution.
+4. Existing verified Phase 2 and Phase 3 work must not be rebuilt without an explicit defect/gap.
+5. Existing verified Phase 4–6 work must be reused where applicable.
+6. Prototype mock data must never be treated as production data.
+7. Prototype shortcuts must not become production architecture.
+8. RQ Blumbang must not become a codebase fork.
+9. QIMA and RQ Blumbang are separate production deployments/domains from the same shared repository/core.
+10. Future units follow the same shared-core / multiple-deployment model.
+11. Secrets must never be committed.
+12. Visual experiments must not override architecture, security, scope isolation, or accessibility requirements.
+13. Production release remains blocked until all required release gates pass.
+
+50. FINAL ARCHITECTURE + EXECUTION STATEMENT
+
+ONE PLATFORM CORE
+        ↓
+MULTIPLE INDEPENDENT UNITS
+        ↓
+MULTIPLE DEPLOYMENTS
+        ↓
+ONE SHARED ARCHITECTURE
+
+Delivery order:
+PROTOTYPE FIRST
+        ↓
+DEMO VALIDATION
+        ↓
+PRODUCTION CONTINUATION
+        ↓
+INTEGRATION
+        ↓
+HARDENING
+        ↓
+QIMA + RQ BLUMBANG DEPLOYMENT
+        ↓
+SCALE
+
+This v1.1 execution plan changes what gets delivered first; it does not discard verified engineering work and does not create a second architecture.
