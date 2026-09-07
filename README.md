@@ -500,8 +500,8 @@ dropped during bundling) passed every source test while failing at runtime.
   `/programs`, `/api/v1/health`, `/api/v1/meta`, prototype static assets, and
   the later-phase 404 boundary.
 - **Status**: Active at https://qima.pages.dev. Production Phase 0–6 foundations
-  are deployed. The latest P0.5 journey-stitching changes require a fresh deployment
-  and live route verification before this status can be updated.
+  and the P0.5 journey-stitching changes are deployed. `/demo`, `/demo/admin/login`,
+  `/demo/admin`, prototype assets, and `/api/v1/health` were verified live on 2026-09-07.
 - **Production data**: D1 migrations `0000`–`0008` are applied to
   `qima-production`; deterministic role/permission seeds include Program,
   Activity, and Participant permissions with their scoped role grants.
