@@ -116,11 +116,40 @@ function statusClass(value) {
   return 'neutral';
 }
 
+function renderNextAction() {
+  if (!dashboard || dashboard.querySelector('#admin-next-action')) return;
+  const panel = document.createElement('article');
+  panel.className = 'admin-panel';
+  panel.id = 'admin-next-action';
+  panel.innerHTML = `
+    <div class="panel-head">
+      <div><span class="eyebrow">NEXT ACTION</span><h2>Yang perlu Anda kerjakan sekarang</h2></div>
+      <span class="status pending">2 item</span>
+    </div>
+    <div class="data-list">
+      <div>
+        <span class="avatar mini" aria-hidden="true">AR</span>
+        <div><strong>2 pendaftaran menunggu</strong><small>Ahmad Rizky · Siti Rahma perlu ditinjau sebelum ditempatkan.</small></div>
+        <button type="button" data-view-target="registrations">Tinjau sekarang <span aria-hidden="true">→</span></button>
+      </div>
+      <div>
+        <span class="avatar mini" aria-hidden="true">SH</span>
+        <div><strong>Agenda berikutnya hari ini</strong><small>Setoran Hafalan · 07 Sep · 16.00 WIB · 28 peserta.</small></div>
+        <button type="button" data-view-target="activities">Buka agenda <span aria-hidden="true">→</span></button>
+      </div>
+    </div>`;
+  const stats = dashboard.querySelector('.stat-grid');
+  if (stats) stats.insertAdjacentElement('afterend', panel);
+  else dashboard.prepend(panel);
+  bindDynamicButtons();
+}
+
 function renderView(key) {
   if (key === 'dashboard') {
     tableView.hidden = true;
     dashboard.hidden = false;
     document.title = 'QIMA — Admin Demo';
+    renderNextAction();
     closeSidebar();
     return;
   }
@@ -235,6 +264,7 @@ document.querySelectorAll('.admin-nav [data-view]').forEach((button) => {
 });
 bindDynamicButtons();
 updateUnit(getStoredUnit() === 'qima' ? 'qima' : 'rq', false);
+renderNextAction();
 
 unitSwitcher?.addEventListener('click', () => setUnitModal(true, unitSwitcher));
 document.querySelector('#context-switch-action')?.addEventListener('click', () => setUnitModal(true, document.querySelector('#context-switch-action')));
