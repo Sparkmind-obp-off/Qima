@@ -1,4 +1,4 @@
-# QIMA — Demo & Validation Pack v1.0
+# QIMA — Demo & Validation Pack v1.1
 
 ## Tujuan
 Paket ini adalah panduan kerja untuk mengubah QIMA dari sekadar mockup menjadi **prototype yang mudah dipresentasikan dan divalidasi** kepada pengelola Rumah Qur'an/yayasan.
@@ -29,6 +29,17 @@ Tidak perlu backend, database, autentikasi nyata, payment, atau integrasi produk
 - 13_PRESENTATION_CHECKLIST.md — checklist sebelum bertemu lembaga
 - 14_DEMO_COPY.md — copy siap dipakai di UI
 - 15_MASTER_TRACEABILITY.md — hubungan kebutuhan → demo → feedback → roadmap
+- 16_PRESENTATION_PLAYBOOK.md — alur presentasi dari opening sampai closing
+- 17_DEMO_OPERATOR_GUIDE.md — panduan menjalankan demo langkah demi langkah
+- 18_PARTICIPANT_QUICK_START.md — panduan singkat untuk orang yang mencoba QIMA
+- 19_POST_PRESENTATION_FOLLOWUP.md — tindak lanjut dan pengolahan hasil presentasi
+
+## Urutan penggunaan
+**Sebelum presentasi:** 01 → 06 → 13 → 16 → 17
+
+**Saat presentasi:** 14 → 17 → 18 → 07 → 08
+
+**Setelah presentasi:** 08 → 15 → 19 → 12
 
 ## Kalimat pembuka yang disarankan
 > "Yang kami bawa hari ini masih berupa prototype/mockup. Kami sengaja belum mengunci sistemnya, karena kami ingin memahami dulu kebutuhan dan alur kerja di lembaga Bapak/Ibu. Jadi kami ingin menunjukkan gambaran konsepnya, lalu mendengar bagian mana yang memang berguna, mana yang perlu diubah, dan apa yang belum kami pikirkan."
@@ -36,3 +47,4 @@ Tidak perlu backend, database, autentikasi nyata, payment, atau integrasi produk
 ## Status
 Prototype untuk discovery/validation — bukan production system.
 
+**Status pack: PRESENTATION + VALIDATION READY v1.1.**
