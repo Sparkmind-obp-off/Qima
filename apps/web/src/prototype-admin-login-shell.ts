@@ -20,6 +20,7 @@ export function renderPrototypeAdminLoginShell() {
     <h1 id="login-title">Lihat sisi operasional dari pengalaman yang sama.</h1>
     <p>Masuk sebagai administrator demo untuk meninjau bagaimana program, aktivitas, peserta, dan pendaftaran dikelola dalam konteks unit.</p>
     <div class="demo-login-context"><small>UNIT CONTEXT</small><div><span class="mini-brand" id="login-unit-mark" aria-hidden="true">RQ</span><span><strong id="login-unit-name">Rumah Qur'an Blumbang</strong><small>Administrator · Demo Mode</small></span></div></div>
+    <div class="login-handoff" id="login-handoff" hidden><small>LANJUTKAN JOURNEY</small><strong id="login-handoff-title"></strong><p id="login-handoff-detail"></p></div>
     <div class="login-disclosure"><span aria-hidden="true">ⓘ</span><p><strong>Tidak memerlukan email atau kata sandi.</strong> Tombol di bawah hanya menyimpan status demo di sesi browser dan tidak melakukan autentikasi production.</p></div>
     <button class="btn btn-primary demo-login-button" id="demo-login-button" type="button">Masuk sebagai Admin Demo <span aria-hidden="true">→</span></button>
     <a class="text-link login-back" href="/demo">← Kembali ke Public Demo</a>
@@ -35,11 +36,19 @@ try {
     document.querySelector('#login-unit-mark').textContent = 'Q';
     document.querySelector('#login-unit-name').textContent = 'QIMA Platform';
   }
+  const handoff = JSON.parse(sessionStorage.getItem('qima-demo-handoff') || 'null');
+  if (handoff?.scenario) {
+    const context = document.querySelector('#login-handoff');
+    document.querySelector('#login-handoff-title').textContent = handoff.role + ' · ' + handoff.scenario;
+    document.querySelector('#login-handoff-detail').textContent = handoff.outcome || 'Konteks siap dilanjutkan ke Admin Dashboard.';
+    context.hidden = false;
+    button.firstChild.textContent = 'Lanjutkan ke Admin Demo ';
+  }
 } catch {}
 button?.addEventListener('click', () => {
   button.disabled = true;
   button.innerHTML = '<span class="button-spinner" aria-hidden="true"></span>Menyiapkan Admin Demo…';
-  sessionStorage.setItem('qima-demo-admin', '1');
+  try { sessionStorage.setItem('qima-demo-admin', '1'); } catch {}
   window.setTimeout(() => { window.location.href = '/demo/admin'; }, 450);
 });
 </script>

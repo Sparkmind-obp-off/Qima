@@ -67,7 +67,10 @@ stakeholder walkthrough.
 - Context switching across Pengelola, Admin, Guru, and Orang Tua/Santri journeys.
 - Playable Santri Baru, Kehadiran, Progres, and Agenda scenarios with realistic static data and browser-local outcomes.
 - Four-choice validation feedback stored only in `sessionStorage`; no feedback is sent to an API or production store.
-- Connected Public → Program → Registration → Success → Admin journey.
+- Connected Public → Role → Scenario → Result → Feedback → Admin operational journey.
+- Browser-local journey handoff preserves the selected role, scenario, result, and relevant Admin destination across `/demo`, `/demo/admin/login`, and `/demo/admin`.
+- Action-first Admin Dashboard places **Yang perlu Anda kerjakan sekarang** before secondary metrics and links each item to the relevant operational view.
+- Contextual Admin review cards provide simulated action → result → next-step states without writing to production data.
 - Shared QIMA platform identity with configurable RQ Blumbang/QIMA unit context that remains consistent across the public, login, and admin demo journey.
 - Responsive public navigation and responsive admin drawer.
 - Keyboard-visible focus, labelled dialogs/forms, trapped modal focus, escape-to-close behavior, reduced-motion support, and semantic landmarks.
@@ -79,15 +82,17 @@ stakeholder walkthrough.
 1. Open `/demo` and select **Mulai Demo**.
 2. Choose a role and one of the four validation scenarios.
 3. Complete the scenario action, inspect the simulated result, and submit browser-local feedback.
-4. Continue to `/demo/admin/login` when comparing the public and admin context.
-5. Enter the admin simulation and navigate Programs, Activities, Registrations, and Participants.
-6. Use **Unit Context** to demonstrate one shared core with a different unit identity.
+4. Continue through the scenario-specific CTA; the login gate explains which role/scenario will be resumed.
+5. Enter the admin simulation. The relevant Pendaftaran, Aktivitas, or Peserta view opens with the preserved context and a browser-local review action.
+6. Complete the simulated review, inspect its result and next step, then return to the action-first dashboard.
+7. Use **Unit Context** to demonstrate one shared core with a different unit identity.
 
 ### Not yet implemented
 
 - Production registration persistence, approval workflow, attendance persistence, reporting, notifications, and payments.
 - Production authentication for demo routes; the demo login is deliberately simulated.
 - Human visual approval across the final target device/browser matrix.
+- Production attendance/progress modules; the Admin handoff currently uses scoped demo context inside the Peserta view.
 
 ### Recommended next gate
 
@@ -495,8 +500,8 @@ dropped during bundling) passed every source test while failing at runtime.
   `/programs`, `/api/v1/health`, `/api/v1/meta`, prototype static assets, and
   the later-phase 404 boundary.
 - **Status**: Active at https://qima.pages.dev. Production Phase 0–6 foundations
-  and the P1 meeting demo quality gates are verified locally; the public and admin
-  demo routes were smoke-tested after deployment with no browser console errors.
+  are deployed. The latest P0.5 journey-stitching changes require a fresh deployment
+  and live route verification before this status can be updated.
 - **Production data**: D1 migrations `0000`–`0008` are applied to
   `qima-production`; deterministic role/permission seeds include Program,
   Activity, and Participant permissions with their scoped role grants.

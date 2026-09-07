@@ -131,6 +131,19 @@ button:disabled { cursor: not-allowed; opacity: .66; transform: none !important;
 .context-callout strong { font-size: 12px; }
 .context-callout p { margin: 0 0 0 auto; color: var(--muted); font-size: 10px; }
 .context-callout button { border: 0; background: transparent; color: var(--green); font-size: 11px; font-weight: 800; cursor: pointer; white-space: nowrap; }
+#admin-next-action { margin-bottom: 18px; border-color: #b9d1c0; box-shadow: 0 14px 36px rgba(15,85,69,.08); }
+#admin-next-action .panel-head { align-items: center; }
+#admin-next-action .data-list > div { align-items: center; }
+#admin-next-action .data-list button { flex: 0 0 auto; border: 1px solid #c9d9cd; border-radius: 10px; background: #f6faf6; color: var(--green); padding: 9px 11px; font-size: 10px; font-weight: 850; cursor: pointer; }
+#admin-next-action .handoff-action { margin-inline: -10px; padding-inline: 10px; border-radius: 13px; background: #edf5ee; }
+.workflow-context { display: grid; grid-template-columns: auto minmax(0,1fr) auto; align-items: center; gap: 16px; margin-bottom: 20px; padding: 20px; border: 1px solid #b9d1c0; border-radius: 18px; background: #edf5ee; box-shadow: 0 14px 36px rgba(15,85,69,.08); }
+.workflow-context .workflow-mark { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 13px; background: var(--green); color: #fff; font-weight: 900; }
+.workflow-context small { color: var(--green); font-size: 9px; font-weight: 850; letter-spacing: .1em; }
+.workflow-context h2 { margin: 4px 0; color: #17362d; font-family: Georgia,serif; font-size: 21px; }
+.workflow-context p { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.55; }
+.workflow-context .workflow-disclaimer { margin-top: 5px; font-size: 9px; }
+.workflow-context > button:not(.admin-primary) { border: 0; background: transparent; color: var(--green); font-size: 10px; font-weight: 850; cursor: pointer; }
+.workflow-complete { background: #f4f8f2; }
 .stat-grid article { position: relative; min-height: 150px; overflow: hidden; }
 .stat-icon { position: absolute; right: 15px; top: 15px; width: 32px; height: 32px; display: grid; place-items: center; border-radius: 10px; background: #edf3ee; color: var(--green); font-size: 15px; }
 .stat-note { display: inline-flex !important; width: auto; }
@@ -168,6 +181,11 @@ button:disabled { cursor: not-allowed; opacity: .66; transform: none !important;
 .demo-login-context > div > span:last-child { display: grid; }
 .demo-login-context strong { font-size: 13px; }
 .demo-login-context small { color: var(--muted); font-size: 10px; }
+.login-handoff { display: grid; gap: 4px; padding: 14px 16px; border: 1px solid #b9d1c0; border-radius: 14px; background: #edf5ee; }
+.login-handoff[hidden] { display: none; }
+.login-handoff > small { color: var(--green); font-size: 9px; font-weight: 850; letter-spacing: .1em; }
+.login-handoff > strong { color: #17362d; font-size: 13px; }
+.login-handoff > p { margin: 0; color: var(--muted); font-size: 10px; line-height: 1.5; }
 .login-disclosure { display: flex; gap: 10px; padding: 12px 14px; border-radius: 12px; background: #f1f4ef; color: var(--muted); }
 .login-disclosure > span { color: var(--green); }
 .login-disclosure p { margin: 0; font-size: 11px; line-height: 1.6; }
@@ -280,6 +298,10 @@ button:disabled { cursor: not-allowed; opacity: .66; transform: none !important;
   .admin-heading h1 { font-size: 36px; }
   .context-callout { align-items: flex-start; flex-direction: column; gap: 10px; }
   .context-callout button { padding: 0; }
+  #admin-next-action .data-list > div { align-items: flex-start; flex-wrap: wrap; }
+  #admin-next-action .data-list button { margin-left: 44px; }
+  .workflow-context { grid-template-columns: auto 1fr; align-items: start; }
+  .workflow-context > button { grid-column: 1 / -1; width: 100%; }
   .stat-grid { grid-template-columns: 1fr 1fr; }
   .stat-grid article { min-height: 138px; }
   .admin-view { padding: 28px 16px; }

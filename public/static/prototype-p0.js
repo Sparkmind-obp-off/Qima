@@ -12,7 +12,7 @@
     admin: {
       label: 'Admin',
       icon: 'A',
-      path: ['Dashboard', 'Santri', 'Tambah / Edit', 'Kelas', 'Kehadiran'],
+      path: ['Dashboard', 'Next Action', 'Pendaftaran / Peserta', 'Review', 'Hasil'],
       text: 'Menjalankan pekerjaan administrasi santri, kelas, dan kehadiran.',
       question: 'Bagian administrasi mana yang paling merepotkan sekarang?',
     },
@@ -39,8 +39,9 @@
       title: 'Hubungkan santri baru ke kelas yang tepat.',
       desc: 'Isi data singkat, pilih kelas, lalu lihat status yang akan diteruskan kepada admin.',
       result: 'Santri baru siap ditinjau dan ditempatkan di kelas.',
-      action: 'Buka Admin Demo',
+      action: 'Tinjau di Admin Demo',
       href: '/demo/admin/login',
+      destination: 'registrations',
     },
     attendance: {
       label: 'Kehadiran',
@@ -48,8 +49,9 @@
       title: 'Catat kondisi kehadiran satu kelas.',
       desc: 'Perbarui status santri, lalu lihat siapa yang memerlukan tindak lanjut.',
       result: 'Ringkasan kehadiran dan tindak lanjut tersedia.',
-      action: 'Lihat Admin Demo',
-      href: '/demo/admin',
+      action: 'Tinjau Kehadiran di Admin',
+      href: '/demo/admin/login',
+      destination: 'participants',
     },
     progress: {
       label: 'Progres',
@@ -57,8 +59,9 @@
       title: 'Catat progres belajar secara ringkas.',
       desc: 'Pilih capaian terbaru dan tentukan apakah santri memerlukan perhatian.',
       result: 'Catatan progres siap menjadi bahan tindak lanjut.',
-      action: 'Lanjut ke Admin Demo',
-      href: '/demo/admin',
+      action: 'Tinjau Progres di Admin',
+      href: '/demo/admin/login',
+      destination: 'participants',
     },
     agenda: {
       label: 'Agenda',
@@ -66,8 +69,9 @@
       title: 'Tentukan agenda yang perlu diperhatikan.',
       desc: 'Tinjau agenda terdekat dan pilih kegiatan yang perlu diprioritaskan.',
       result: 'Agenda prioritas terlihat dalam konteks operasional unit.',
-      action: 'Lihat Agenda Public',
-      href: '#activities',
+      action: 'Tinjau Agenda di Admin',
+      href: '/demo/admin/login',
+      destination: 'activities',
     },
   };
 
@@ -378,9 +382,26 @@
     focusContent();
   }
 
+  function storeHandoff(feedback) {
+    const scenario = scenarios[state.scenario];
+    try {
+      sessionStorage.setItem('qima-demo-handoff', JSON.stringify({
+        role: roles[state.role].label,
+        scenario: scenario.label,
+        destination: scenario.destination,
+        outcome: state.outcome || scenario.result,
+        detail: state.detail,
+        feedback,
+      }));
+    } catch {
+      // Direct navigation remains available when browser storage is unavailable.
+    }
+  }
+
   function renderComplete(feedback) {
     const scenario = scenarios[state.scenario];
-    content.innerHTML = `<div class="p0-complete" aria-hidden="true">✓</div>${stepHeader(5)}<h2 id="p0-title">Terima kasih. Demo selesai.</h2><p class="p0-lead">Masukan <strong>“${escapeHtml(feedback)}”</strong> tercatat hanya untuk sesi browser ini. Ini adalah bahan percakapan validasi, bukan bukti bahwa kebutuhan pasar sudah tervalidasi.</p><div class="p0-result"><small>Alur yang baru dimainkan</small><strong>${roles[state.role].label} · ${scenario.label}</strong><p class="p0-lead">${escapeHtml(state.outcome || scenario.result)}</p></div><div class="p0-actions"><a class="btn btn-primary" href="${scenario.href}" id="p0-continue">${scenario.action} <span aria-hidden="true">→</span></a><button class="p0-link" id="p0-restart" type="button">Ulangi dari awal</button><button class="p0-link" id="p0-finish" type="button">Selesai</button></div>`;
+    storeHandoff(feedback);
+    content.innerHTML = `<div class="p0-complete" aria-hidden="true">✓</div>${stepHeader(5)}<h2 id="p0-title">Terima kasih. Demo selesai.</h2><p class="p0-lead">Masukan <strong>“${escapeHtml(feedback)}”</strong> tercatat hanya untuk sesi browser ini. Ini adalah bahan percakapan validasi, bukan bukti bahwa kebutuhan pasar sudah tervalidasi.</p><div class="p0-result"><small>Alur yang baru dimainkan</small><strong>${roles[state.role].label} · ${scenario.label}</strong><p class="p0-lead">${escapeHtml(state.outcome || scenario.result)}</p><small class="p0-next-label">Langkah berikutnya</small><p class="p0-lead">Buka konteks operasional yang relevan untuk melihat apa yang perlu ditinjau berikutnya.</p></div><div class="p0-actions"><a class="btn btn-primary" href="${scenario.href}" id="p0-continue">${scenario.action} <span aria-hidden="true">→</span></a><button class="p0-link" id="p0-restart" type="button">Ulangi dari awal</button><button class="p0-link" id="p0-finish" type="button">Selesai</button></div>`;
     content.querySelector('#p0-restart').onclick = () => {
       state.role = null;
       state.scenario = null;

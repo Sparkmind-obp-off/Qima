@@ -70,6 +70,49 @@ const sidebarScrim = document.querySelector('#sidebar-scrim');
 let toastTimer;
 let lastFocusedElement;
 
+function escapeHtml(value) {
+  const element = document.createElement('div');
+  element.textContent = String(value || '');
+  return element.innerHTML;
+}
+
+function getHandoff() {
+  try {
+    return JSON.parse(sessionStorage.getItem('qima-demo-handoff') || 'null');
+  } catch {
+    return null;
+  }
+}
+
+let activeHandoff = getHandoff();
+
+const workflowCopy = {
+  'Santri Baru': {
+    title: 'Tinjau calon santri dari guided demo',
+    action: 'Simulasikan review',
+    result: 'Review simulasi selesai. Calon santri siap dikonfirmasi untuk penempatan kelas.',
+    next: 'Langkah berikutnya: konfirmasi kelas bersama pengelola unit.',
+  },
+  Kehadiran: {
+    title: 'Tinjau ringkasan kehadiran dari guided demo',
+    action: 'Tandai untuk tindak lanjut',
+    result: 'Ringkasan ditandai dalam sesi demo. Santri yang absen siap ditindaklanjuti.',
+    next: 'Langkah berikutnya: diskusikan cara lembaga menghubungi wali santri.',
+  },
+  Progres: {
+    title: 'Tinjau catatan progres dari guided demo',
+    action: 'Simulasikan review progres',
+    result: 'Catatan progres telah ditinjau dalam simulasi dan siap dibahas dengan guru.',
+    next: 'Langkah berikutnya: sepakati indikator perhatian yang digunakan lembaga.',
+  },
+  Agenda: {
+    title: 'Tinjau agenda prioritas dari guided demo',
+    action: 'Konfirmasi simulasi agenda',
+    result: 'Agenda prioritas dikonfirmasi dalam sesi demo tanpa mengubah data production.',
+    next: 'Langkah berikutnya: tentukan siapa yang perlu menerima informasi kegiatan.',
+  },
+};
+
 function getStoredUnit() {
   try {
     return sessionStorage.getItem('qima-demo-unit');
@@ -138,10 +181,32 @@ function renderNextAction() {
         <button type="button" data-view-target="activities">Buka agenda <span aria-hidden="true">→</span></button>
       </div>
     </div>`;
+  if (activeHandoff?.scenario) {
+    const scenario = escapeHtml(activeHandoff.scenario);
+    const outcome = escapeHtml(activeHandoff.outcome);
+    panel.querySelector('.data-list').insertAdjacentHTML('afterbegin', `<div class="handoff-action"><span class="avatar mini" aria-hidden="true">→</span><div><strong>Lanjutkan ${scenario}</strong><small>${outcome}</small></div><button type="button" data-view-target="${escapeHtml(activeHandoff.destination)}">Buka konteks <span aria-hidden="true">→</span></button></div>`);
+  }
   const stats = dashboard.querySelector('.stat-grid');
-  if (stats) stats.insertAdjacentElement('afterend', panel);
+  if (stats) stats.insertAdjacentElement('beforebegin', panel);
   else dashboard.prepend(panel);
   bindDynamicButtons();
+}
+
+function workflowContext(key) {
+  const copy = activeHandoff && workflowCopy[activeHandoff.scenario];
+  if (!copy || activeHandoff.destination !== key) return '';
+  if (activeHandoff.completed) {
+    return `<article class="workflow-context workflow-complete" id="workflow-context" role="status"><span class="workflow-mark" aria-hidden="true">✓</span><div><small>HASIL SIMULASI · ${escapeHtml(activeHandoff.role)}</small><h2>${escapeHtml(copy.result)}</h2><p>${escapeHtml(copy.next)}</p></div><button type="button" data-view-target="dashboard">Kembali ke dashboard</button></article>`;
+  }
+  return `<article class="workflow-context" id="workflow-context"><span class="workflow-mark" aria-hidden="true">→</span><div><small>KONTEKS DARI PUBLIC DEMO · ${escapeHtml(activeHandoff.role)}</small><h2>${escapeHtml(copy.title)}</h2><p><strong>${escapeHtml(activeHandoff.outcome)}</strong>${activeHandoff.detail ? ` · ${escapeHtml(activeHandoff.detail)}` : ''}</p><p class="workflow-disclaimer">Data tetap statis dan tindakan berikut hanya mengubah state sesi browser.</p></div><button class="admin-primary" id="complete-workflow" type="button">${escapeHtml(copy.action)} <span aria-hidden="true">→</span></button></article>`;
+}
+
+function completeWorkflow(key) {
+  if (!activeHandoff) return;
+  activeHandoff.completed = true;
+  try { sessionStorage.setItem('qima-demo-handoff', JSON.stringify(activeHandoff)); } catch {}
+  renderView(key);
+  showToast('Tindakan simulasi selesai. Tidak ada data production yang diubah.');
 }
 
 function renderView(key) {
@@ -161,6 +226,7 @@ function renderView(key) {
   document.title = `${config.title} · QIMA Admin Demo`;
   tableView.innerHTML = `
     <div class="admin-heading"><div><span class="eyebrow">${config.eyebrow}</span><h1>${config.title}</h1><p>${config.description}</p></div><button class="admin-primary" type="button" data-toast="${config.toast}">${config.action}</button></div>
+    ${workflowContext(key)}
     <div class="list-toolbar"><label for="table-search">Cari ${config.title.toLowerCase()}<input id="table-search" type="search" placeholder="Ketik kata kunci…"></label><span>${demoRows[key].length} data demo</span></div>
     <div class="admin-panel table-panel" role="region" aria-label="Daftar ${config.title}" tabindex="0">
       <div role="table" aria-label="Data ${config.title}">
@@ -171,6 +237,7 @@ function renderView(key) {
     </div>`;
 
   bindDynamicButtons();
+  document.querySelector('#complete-workflow')?.addEventListener('click', () => completeWorkflow(key));
   const search = document.querySelector('#table-search');
   search?.addEventListener('input', () => {
     const query = search.value.toLowerCase().trim();
@@ -265,6 +332,9 @@ document.querySelectorAll('.admin-nav [data-view]').forEach((button) => {
 bindDynamicButtons();
 updateUnit(getStoredUnit() === 'qima' ? 'qima' : 'rq', false);
 renderNextAction();
+if (activeHandoff?.destination && viewConfig[activeHandoff.destination]) {
+  showView(activeHandoff.destination);
+}
 
 unitSwitcher?.addEventListener('click', () => setUnitModal(true, unitSwitcher));
 document.querySelector('#context-switch-action')?.addEventListener('click', () => setUnitModal(true, document.querySelector('#context-switch-action')));
