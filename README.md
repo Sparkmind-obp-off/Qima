@@ -44,11 +44,14 @@ all doc 10 §24 Phase 6 exit criteria passed the repository quality gates.
 
 Registration and all later business modules remain deliberately unimplemented.
 
-## P1 Meeting Demo
+## P0 Validation Prototype
 
 The repository includes a presentation-only experience for stakeholder validation. It
 uses centralized static demo data and browser-local simulated interactions; it does
 not authenticate against, read from, or write to the production application data path.
+The primary `/demo` entry now provides a five-step Role → Scenario → Play → Result →
+Feedback journey designed for an approximately two-minute introduction and a five-minute
+stakeholder walkthrough.
 
 ### Demo entry points
 
@@ -60,6 +63,10 @@ not authenticate against, read from, or write to the production application data
 
 ### Completed demo capabilities
 
+- Five-step guided validation journey with progress, Back, Skip, safe close, restart, and explicit completion state.
+- Context switching across Pengelola, Admin, Guru, and Orang Tua/Santri journeys.
+- Playable Santri Baru, Kehadiran, Progres, and Agenda scenarios with realistic static data and browser-local outcomes.
+- Four-choice validation feedback stored only in `sessionStorage`; no feedback is sent to an API or production store.
 - Connected Public → Program → Registration → Success → Admin journey.
 - Shared QIMA platform identity with configurable RQ Blumbang/QIMA unit context that remains consistent across the public, login, and admin demo journey.
 - Responsive public navigation and responsive admin drawer.
@@ -69,15 +76,16 @@ not authenticate against, read from, or write to the production application data
 
 ### Demo user guide
 
-1. Open `/demo` and use **Jelajahi Program**.
-2. Open a program, continue to registration, and submit fictional details.
-3. Continue from the simulated success state to `/demo/admin/login`.
-4. Enter the admin simulation and navigate Programs, Activities, Registrations, and Participants.
-5. Use **Unit Context** to demonstrate one shared core with a different unit identity.
+1. Open `/demo` and select **Mulai Demo**.
+2. Choose a role and one of the four validation scenarios.
+3. Complete the scenario action, inspect the simulated result, and submit browser-local feedback.
+4. Continue to `/demo/admin/login` when comparing the public and admin context.
+5. Enter the admin simulation and navigate Programs, Activities, Registrations, and Participants.
+6. Use **Unit Context** to demonstrate one shared core with a different unit identity.
 
 ### Not yet implemented
 
-- Production registration persistence, approval workflow, attendance, reporting, notifications, and payments.
+- Production registration persistence, approval workflow, attendance persistence, reporting, notifications, and payments.
 - Production authentication for demo routes; the demo login is deliberately simulated.
 - Human visual approval across the final target device/browser matrix.
 

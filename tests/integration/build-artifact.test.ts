@@ -83,7 +83,22 @@ describe('static assets', () => {
     expect(await exists(resolve(distDir, 'static/prototype.css'))).toBe(true);
     expect(await exists(resolve(distDir, 'static/prototype-flow.css'))).toBe(true);
     expect(await exists(resolve(distDir, 'static/prototype.js'))).toBe(true);
+    expect(await exists(resolve(distDir, 'static/prototype-p0.js'))).toBe(true);
     expect(await exists(resolve(distDir, 'static/prototype-admin.js'))).toBe(true);
+  });
+
+  it('ships the complete P0 validation journey contract', async () => {
+    const script = await readFile(resolve(distDir, 'static/prototype-p0.js'), 'utf8');
+
+    expect(script).toContain('Pengelola');
+    expect(script).toContain('Orang Tua / Santri');
+    expect(script).toContain('Santri Baru');
+    expect(script).toContain('Kehadiran');
+    expect(script).toContain('Progres');
+    expect(script).toContain('Agenda');
+    expect(script).toContain('Guided Demo');
+    expect(script).toContain('sessionStorage');
+    expect(script).not.toMatch(/fetch\s*\(/);
   });
 
   it('excludes static assets from the worker route so they are served directly', async () => {
